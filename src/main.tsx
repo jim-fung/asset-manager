@@ -10,7 +10,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <JotaiProvider>
       <BrowserRouter>
-        <Theme accentColor="blue" grayColor="slate" radius="medium" scaling="100%">
+        <Theme appearance="dark" accentColor="amber" grayColor="sand" radius="medium" scaling="100%">
           <App />
         </Theme>
       </BrowserRouter>
