@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { selectedChapterAtom } from "@/store/atoms";
+import { selectedChapterAtom, themeAtom } from "@/store/atoms";
 import { chapters, images } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
@@ -21,6 +21,7 @@ const homeIcon = (
 
 export function Sidebar() {
   const [selectedChapter, setSelectedChapter] = useAtom(selectedChapterAtom);
+  const [theme, setTheme] = useAtom(themeAtom);
   const statusMap = useImageStatuses();
 
   const statusCounts = images.reduce(
@@ -94,6 +95,23 @@ export function Sidebar() {
           <span className="sidebar-stat-value" style={{ color: "var(--color-needs-replacement)" }}>
             {statusCounts["needs-replacement"] || 0}
           </span>
+        </div>
+        <div className="sidebar-stat-row" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border-subtle)" }}>
+          <span className="sidebar-stat-label">Theme</span>
+          <button
+            onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            style={{
+              background: "var(--color-bg-elevated)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-primary)",
+              padding: "4px 8px",
+              borderRadius: "6px",
+              fontSize: "0.7rem",
+              cursor: "pointer"
+            }}
+          >
+            {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
+          </button>
         </div>
       </div>
     </>
