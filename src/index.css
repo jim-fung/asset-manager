@@ -4,43 +4,7 @@
 @import "@radix-ui/themes/styles.css";
 
 :root {
-  /* ── Default (Dark) Palette — warm earth tones inspired by Kalihna art ── */
-  --color-bg-deep: #0c0b0f;
-  --color-bg-base: #121118;
-  --color-bg-surface: #1a1824;
-  --color-bg-elevated: #231f30;
-  --color-bg-hover: #2d2840;
-
-  --color-border: #2e2a3a;
-  --color-border-subtle: #1f1c28;
-
-  --color-text-primary: #f0ece4;
-  --color-text-secondary: #a09aad;
-  --color-text-muted: #6b6578;
-
-  /* Accent warm ochre — connects to earth pigments */
-  --color-accent: #d4944c;
-  --color-accent-hover: #e0a660;
-  --color-accent-muted: rgba(212, 148, 76, 0.15);
-
-  /* Status colors */
-  --color-approved: #4ade80;
-  --color-review: #fbbf24;
-  --color-needs-replacement: #f87171;
-  --color-unset: #6b6578;
-
-  /* Sizing */
-  --sidebar-width: 280px;
-  --header-height: 64px;
-
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.theme-light {
-  /* ── Light Palette ── */
+  /* ── Light Palette — warm earth tones inspired by Kalihna art ── */
   --color-bg-deep: #f5f3ef;
   --color-bg-base: #fcfbfa;
   --color-bg-surface: #ffffff;
@@ -64,11 +28,18 @@
   --color-review: #d97706;
   --color-needs-replacement: #dc2626;
   --color-unset: #9ca3af;
+
+  /* Sizing */
+  --sidebar-width: 280px;
+  --header-height: 64px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body {
-  background-color: var(--color-bg-deep);
-}
+
 
 * {
   margin: 0;
@@ -252,7 +223,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(12, 11, 15, 0.85);
+  background: rgba(252, 251, 250, 0.88);
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
   border-bottom: 1px solid var(--color-border-subtle);

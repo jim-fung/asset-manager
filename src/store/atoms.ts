@@ -32,6 +32,3 @@ export const imageNotesMapAtom = atomWithStorage<Record<string, string>>(
   {},
 );
 
-/** App theme, persisted to localStorage */
-export const themeAtom = atomWithStorage<"light" | "dark">("iam-theme", "dark");
-
