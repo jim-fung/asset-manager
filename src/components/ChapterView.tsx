@@ -86,7 +86,7 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           {searchIcon}
           <input
             type="text"
-            placeholder="Search images…"
+            placeholder="Search images"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -138,7 +138,7 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-state-icon">🔍</div>
+            <div className="empty-state-icon"></div>
             <div className="empty-state-text">
               No images match your filters
             </div>

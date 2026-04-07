@@ -1,10 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
 
 @import "tailwindcss";
+@source "../src";
 @import "@radix-ui/themes/styles.css";
 
+
 :root {
-  /* ── Light Palette — warm earth tones inspired by Kalihna art ── */
+  /* -- Light Palette - warm earth tones inspired by Kalihna art -- */
   --color-bg-deep: #f5f3ef;
   --color-bg-base: #fcfbfa;
   --color-bg-surface: #ffffff;
@@ -18,7 +20,7 @@
   --color-text-secondary: #5a564e;
   --color-text-muted: #8b867c;
 
-  /* Accent warm ochre — connects to earth pigments */
+  /* Accent warm ochre - connects to earth pigments */
   --color-accent: #b06b22;
   --color-accent-hover: #cd7d29;
   --color-accent-muted: rgba(176, 107, 34, 0.1);
@@ -65,7 +67,7 @@ body {
   min-height: 100vh;
 }
 
-/* ── Scrollbar ── */
+/* -- Scrollbar -- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -81,7 +83,7 @@ body {
   background: var(--color-text-muted);
 }
 
-/* ── Layout shell ── */
+/* -- Layout shell -- */
 .app-layout {
   display: flex;
   min-height: 100vh;
@@ -109,7 +111,7 @@ body {
   transition: margin-left var(--transition-base);
 }
 
-/* ── Sidebar ── */
+/* -- Sidebar -- */
 .sidebar-header {
   padding: 20px 20px 16px;
   border-bottom: 1px solid var(--color-border-subtle);
@@ -218,7 +220,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Header / Toolbar ── */
+/* -- Header / Toolbar -- */
 .page-header {
   position: sticky;
   top: 0;
@@ -248,7 +250,7 @@ body {
   margin-left: 4px;
 }
 
-/* ── Search / Filter Bar ── */
+/* -- Search / Filter Bar -- */
 .search-bar {
   display: flex;
   align-items: center;
@@ -350,12 +352,12 @@ body {
   color: var(--color-accent);
 }
 
-/* ── Content Area ── */
+/* -- Content Area -- */
 .page-content {
   padding: 28px 32px 48px;
 }
 
-/* ── Dashboard Overview ── */
+/* -- Dashboard Overview -- */
 .overview-hero {
   text-align: center;
   padding: 40px 20px 52px;
@@ -498,7 +500,7 @@ body {
   height: 14px;
 }
 
-/* ── Image Grid ── */
+/* -- Image Grid -- */
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -510,7 +512,7 @@ body {
   gap: 8px;
 }
 
-/* ── Image Card ── */
+/* -- Image Card -- */
 .image-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);
@@ -602,7 +604,7 @@ body {
   margin-top: 4px;
 }
 
-/* ── List mode image card ── */
+/* -- List mode image card -- */
 .image-grid.list-mode .image-card {
   display: flex;
   flex-direction: row;
@@ -623,7 +625,7 @@ body {
   padding: 10px 16px;
 }
 
-/* ── Lightbox ── */
+/* -- Lightbox -- */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -675,7 +677,7 @@ body {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* ── Version tab bar ── */
+/* -- Version tab bar -- */
 .lightbox-version-bar {
   display: flex;
   align-items: center;
@@ -875,7 +877,7 @@ body {
   color: var(--color-text-muted);
 }
 
-/* ── Versions panel (in the side panel) ── */
+/* -- Versions panel (in the side panel) -- */
 .lightbox-versions-panel {
   display: flex;
   flex-direction: column;
@@ -907,7 +909,7 @@ body {
   opacity: 0.45;
 }
 
-/* ── Empty state ── */
+/* -- Empty state -- */
 .empty-state {
   text-align: center;
   padding: 64px 20px;
@@ -924,7 +926,7 @@ body {
   color: var(--color-text-muted);
 }
 
-/* ── Status badge ── */
+/* -- Status badge -- */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -951,7 +953,7 @@ body {
 .status-badge.unset { background: rgba(107, 101, 120, 0.12); color: var(--color-unset); }
 .status-badge.unset .dot { background: var(--color-unset); }
 
-/* ── Responsive ── */
+/* -- Responsive -- */
 @media (max-width: 768px) {
   .app-sidebar {
     transform: translateX(-100%);

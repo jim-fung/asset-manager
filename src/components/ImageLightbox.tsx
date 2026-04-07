@@ -1,25 +1,27 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
 import {
   selectedImageAtom,
   imageStatusMapAtom,
   imageNotesMapAtom,
   activeVersionAtom,
+  activeSectionAtom,
 } from "@/store/atoms";
 import { getChapterImages } from "@/data/imageData";
+import { getCollectionFiles, digiFileToImageAsset } from "@/data/digiFilesData";
 import type { ImageStatus, ImageVersion } from "@/data/imageData";
 
 const statusOptions: { value: ImageStatus; label: string }[] = [
   { value: "unset", label: "Unset" },
-  { value: "approved", label: "✓ Approved" },
-  { value: "review", label: "⟳ Needs Review" },
-  { value: "needs-replacement", label: "✕ Needs Replacement" },
+  { value: "approved", label: " Approved" },
+  { value: "review", label: " Needs Review" },
+  { value: "needs-replacement", label: " Needs Replacement" },
 ];
 
 const versionTabs: { value: ImageVersion; label: string; icon: string }[] = [
-  { value: "regular", label: "Regular", icon: "○" },
-  { value: "optimized", label: "Optimised", icon: "◎" },
-  { value: "print", label: "Print Ready", icon: "◉" },
+  { value: "regular", label: "Regular", icon: "" },
+  { value: "optimized", label: "Optimised", icon: "" },
+  { value: "print", label: "Print Ready", icon: "" },
 ];
 
 export function ImageLightbox() {
@@ -27,6 +29,7 @@ export function ImageLightbox() {
   const [statusMap, setStatusMap] = useAtom(imageStatusMapAtom);
   const [notesMap, setNotesMap] = useAtom(imageNotesMapAtom);
   const [activeVersion, setActiveVersion] = useAtom(activeVersionAtom);
+  const [activeSection] = useAtom(activeSectionAtom);
 
   const close = useCallback(() => setSelectedImage(null), [setSelectedImage]);
 
@@ -35,12 +38,24 @@ export function ImageLightbox() {
     setActiveVersion("regular");
   }, [selectedImage?.id, setActiveVersion]);
 
-  const chapterImages = selectedImage
-    ? getChapterImages(selectedImage.chapterId)
-    : [];
+  // Get current sequence for navigation
+  const chapterImages = useMemo(() => {
+    if (!selectedImage) return [];
+    
+    // If we're in 'digi-files' section, get images from the digital collection registry
+    if (activeSection === 'digi-files') {
+      const files = getCollectionFiles(selectedImage.chapterId);
+      // Map back to ImageAsset for consistency in the lightbox UI
+      return files.map(f => digiFileToImageAsset(f));
+    }
+    
+    return getChapterImages(selectedImage.chapterId);
+  }, [selectedImage, activeSection]);
+
   const currentIndex = selectedImage
     ? chapterImages.findIndex((i) => i.id === selectedImage.id)
     : -1;
+
 
   const goTo = useCallback(
     (delta: number) => {
@@ -92,7 +107,7 @@ export function ImageLightbox() {
     <div className="lightbox-overlay" onClick={close}>
       <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
         <button className="lightbox-close" onClick={close} title="Close (Esc)">
-          ✕
+          
         </button>
 
         {chapterImages.length > 1 && (
@@ -100,21 +115,21 @@ export function ImageLightbox() {
             <button
               className="lightbox-nav prev"
               onClick={() => goTo(-1)}
-              title="Previous (←)"
+              title="Previous ()"
             >
-              ‹
+              
             </button>
             <button
               className="lightbox-nav next"
               onClick={() => goTo(1)}
-              title="Next (→)"
+              title="Next ()"
             >
-              ›
+              
             </button>
           </>
         )}
 
-        {/* Version tab bar — always shown so users know versions exist */}
+        {/* Version tab bar  always shown so users know versions exist */}
         <div className="lightbox-version-bar">
           {versionTabs.map((tab) => {
             const available = versionAvailable[tab.value];
@@ -139,7 +154,7 @@ export function ImageLightbox() {
                 <span className="lightbox-version-tab-icon">{tab.icon}</span>
                 {tab.label}
                 {!available && (
-                  <span className="lightbox-version-tab-badge">—</span>
+                  <span className="lightbox-version-tab-badge"></span>
                 )}
               </button>
             );
@@ -250,7 +265,7 @@ export function ImageLightbox() {
           </span>
           <textarea
             className="lightbox-notes-area"
-            placeholder="Add production notes…"
+            placeholder="Add production notes"
             value={currentNotes}
             onChange={(e) =>
               setNotesMap((prev) => ({

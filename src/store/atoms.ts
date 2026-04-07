@@ -2,8 +2,14 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import type { ImageStatus, ImageAsset, ImageVersion } from "@/data/imageData";
 
+/** Active top-level section */
+export const activeSectionAtom = atom<"book" | "digi-files">("book");
+
 /** Currently selected chapter ID (null = overview dashboard) */
 export const selectedChapterAtom = atom<string | null>(null);
+
+/** Currently selected digi-files collection ID (null = all collections) */
+export const selectedCollectionAtom = atom<string | null>(null);
 
 /** Search query for filtering images */
 export const searchQueryAtom = atom("");
@@ -33,7 +39,7 @@ export const imageNotesMapAtom = atomWithStorage<Record<string, string>>(
 );
 
 /**
- * Active version tab in the lightbox (ephemeral — not persisted).
+ * Active version tab in the lightbox (ephemeral  not persisted).
  * Always resets to "regular" when a new image is opened.
  */
 export const activeVersionAtom = atom<ImageVersion>("regular");

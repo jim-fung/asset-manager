@@ -1,6 +1,7 @@
 import { useAtom } from "jotai";
-import { selectedChapterAtom } from "@/store/atoms";
+import { selectedChapterAtom, activeSectionAtom, selectedCollectionAtom } from "@/store/atoms";
 import { chapters, images } from "@/data/imageData";
+import { digiCollections, digiFiles } from "@/data/digiFilesData";
 import type { ImageStatus } from "@/data/imageData";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
 
@@ -19,8 +20,23 @@ const homeIcon = (
   </svg>
 );
 
+const folderIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const allFilesIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
+    <path d="M3 9V7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
 export function Sidebar() {
   const [selectedChapter, setSelectedChapter] = useAtom(selectedChapterAtom);
+  const [activeSection, setActiveSection] = useAtom(activeSectionAtom);
+  const [selectedCollection, setSelectedCollection] = useAtom(selectedCollectionAtom);
   const statusMap = useImageStatuses();
 
   const statusCounts = images.reduce(
@@ -32,6 +48,16 @@ export function Sidebar() {
     {} as Record<ImageStatus, number>,
   );
 
+  function goBook(chapterId: string | null) {
+    setActiveSection("book");
+    setSelectedChapter(chapterId);
+  }
+
+  function goDigiFiles(collectionId: string | null) {
+    setActiveSection("digi-files");
+    setSelectedCollection(collectionId);
+  }
+
   return (
     <>
       <div className="sidebar-header">
@@ -40,9 +66,10 @@ export function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
+        {/* - Book section - */}
         <button
-          className={`sidebar-item ${selectedChapter === null ? "active" : ""}`}
-          onClick={() => setSelectedChapter(null)}
+          className={`sidebar-item ${activeSection === "book" && selectedChapter === null ? "active" : ""}`}
+          onClick={() => goBook(null)}
         >
           {homeIcon}
           <span>Overview</span>
@@ -53,8 +80,8 @@ export function Sidebar() {
         {chapters.map((ch) => (
           <button
             key={ch.id}
-            className={`sidebar-item ${selectedChapter === ch.id ? "active" : ""}`}
-            onClick={() => setSelectedChapter(ch.id)}
+            className={`sidebar-item ${activeSection === "book" && selectedChapter === ch.id ? "active" : ""}`}
+            onClick={() => goBook(ch.id)}
           >
             {chapterIcon}
             <span>
@@ -62,6 +89,30 @@ export function Sidebar() {
               {ch.title}
             </span>
             <span className="sidebar-item-count">{ch.imageCount}</span>
+          </button>
+        ))}
+
+        {/* - Digital Files section - */}
+        <div className="sidebar-section-label" style={{ marginTop: 16 }}>Digital Files</div>
+
+        <button
+          className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === null ? "active" : ""}`}
+          onClick={() => goDigiFiles(null)}
+        >
+          {allFilesIcon}
+          <span>All Collections</span>
+          <span className="sidebar-item-count">{digiFiles.length}</span>
+        </button>
+
+        {digiCollections.map((col) => (
+          <button
+            key={col.id}
+            className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === col.id ? "active" : ""}`}
+            onClick={() => goDigiFiles(col.id)}
+          >
+            {folderIcon}
+            <span>{col.label}</span>
+            <span className="sidebar-item-count">{col.fileCount}</span>
           </button>
         ))}
       </nav>
@@ -95,7 +146,6 @@ export function Sidebar() {
             {statusCounts["needs-replacement"] || 0}
           </span>
         </div>
-
       </div>
     </>
   );

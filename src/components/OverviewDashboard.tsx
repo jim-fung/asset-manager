@@ -158,7 +158,7 @@ export function OverviewDashboard() {
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedImage(img)}
-                title={`${img.filename} — ${img.section}`}
+                title={`${img.filename}  ${img.section}`}
               >
                 <img
                   src={img.src}
