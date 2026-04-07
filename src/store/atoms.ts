@@ -23,8 +23,11 @@ export const selectedImageAtom = atom<ImageAsset | null>(null);
 /** Grid vs list toggle */
 export const viewModeAtom = atom<"grid" | "list">("grid");
 
-/** Sidebar collapsed state */
+/** Sidebar collapsed state for desktop */
 export const sidebarCollapsedAtom = atom(false);
+
+/** Sidebar open state for mobile */
+export const mobileSidebarOpenAtom = atom(false);
 
 /** Per-image status overrides, keyed by image id, persisted to localStorage */
 export const imageStatusMapAtom = atomWithStorage<Record<string, ImageStatus>>(

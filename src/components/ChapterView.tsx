@@ -2,6 +2,7 @@ import { useAtom } from "jotai";
 import { searchQueryAtom, filterStatusAtom, viewModeAtom, selectedImageAtom } from "@/store/atoms";
 import { getChapter, getChapterImages } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
+import { Header } from "@/components/Header";
 import { ImageCard } from "@/components/ImageCard";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
 
@@ -72,21 +73,15 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
 
   return (
     <>
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <div className="page-title">
-            {chapter.number !== null ? `Chapter ${chapter.number}: ` : ""}
-            {chapter.title}
-          </div>
-          <div className="page-subtitle">{chapter.titleNl}</div>
-        </div>
-
+      <Header 
+        title={`${chapter.number !== null ? `Chapter ${chapter.number}: ` : ""}${chapter.title}`}
+        subtitle={chapter.titleNl}
+      >
         <div className="search-bar">
           {searchIcon}
           <input
             type="text"
-            placeholder="Search images"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -120,7 +115,7 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
             {listIcon}
           </button>
         </div>
-      </div>
+      </Header>
 
       {/* Content */}
       <div className="page-content">

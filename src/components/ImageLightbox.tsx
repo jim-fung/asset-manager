@@ -107,24 +107,31 @@ export function ImageLightbox() {
     <div className="lightbox-overlay" onClick={close}>
       <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
         <button className="lightbox-close" onClick={close} title="Close (Esc)">
-          
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
 
         {chapterImages.length > 1 && (
           <>
             <button
               className="lightbox-nav prev"
-              onClick={() => goTo(-1)}
-              title="Previous ()"
+              onClick={(e) => { e.stopPropagation(); goTo(-1); }}
+              title="Previous"
             >
-              
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
             <button
               className="lightbox-nav next"
-              onClick={() => goTo(1)}
-              title="Next ()"
+              onClick={(e) => { e.stopPropagation(); goTo(1); }}
+              title="Next"
             >
-              
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </button>
           </>
         )}

@@ -9,6 +9,7 @@ import {
   digiFileToImageAsset,
   type DigiFile,
 } from "@/data/digiFilesData";
+import { Header } from "@/components/Header";
 
 // - SVG Icons -
 
@@ -63,18 +64,12 @@ export function DigiFilesView() {
 
   return (
     <>
-      {/* Header */}
-      <div className="page-header">
-        <div>
-          <div className="page-title">{title}</div>
-          <div className="page-subtitle">{subtitle}</div>
-        </div>
-
+      <Header title={title} subtitle={subtitle}>
         <div className="search-bar">
           {searchIcon}
           <input
             type="text"
-            placeholder="Search files-"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -96,7 +91,7 @@ export function DigiFilesView() {
             {listIcon}
           </button>
         </div>
-      </div>
+      </Header>
 
       {/* Content */}
       <div className="page-content">
