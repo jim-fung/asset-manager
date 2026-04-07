@@ -1,11 +1,27 @@
 /** Status of an image in the book production pipeline */
 export type ImageStatus = "approved" | "review" | "needs-replacement" | "unset";
 
+/** Version variant of an image asset */
+export type ImageVersion = "regular" | "optimized" | "print";
+
+/** The three possible versions of a single image */
+export interface ImageVersions {
+  /** Original unaltered file — always present, used for all thumbnails */
+  regular: string;
+  /** Web-optimised export (compressed, resized for screen) */
+  optimized?: string;
+  /** High-resolution, colour-corrected export ready for print */
+  print?: string;
+}
+
 /** A single image asset used in the book */
 export interface ImageAsset {
   id: string;
   filename: string;
+  /** Canonical src — always the regular (original) file. Used for all thumbnails. */
   src: string;
+  /** All available version paths for this image */
+  versions: ImageVersions;
   chapter: string;
   chapterId: string;
   section: string;
@@ -112,10 +128,18 @@ function img(
   caption: string = "",
   alt: string = "",
 ): ImageAsset {
+  const regular = `/images/book/${filename}`;
   return {
     id: filename.replace(/\.\w+$/, ""),
     filename,
-    src: `/images/book/${filename}`,
+    src: regular,
+    versions: {
+      regular,
+      // Optimized and print paths follow the convention below.
+      // Uncomment and adjust once the files are in place:
+      // optimized: `/images/book/optimized/${filename}`,
+      // print: `/images/book/print/${filename}`,
+    },
     chapter: chapters.find((c) => c.id === chapterId)?.title ?? chapterId,
     chapterId,
     section,

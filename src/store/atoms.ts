@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { ImageStatus, ImageAsset } from "@/data/imageData";
+import type { ImageStatus, ImageAsset, ImageVersion } from "@/data/imageData";
 
 /** Currently selected chapter ID (null = overview dashboard) */
 export const selectedChapterAtom = atom<string | null>(null);
@@ -32,3 +32,8 @@ export const imageNotesMapAtom = atomWithStorage<Record<string, string>>(
   {},
 );
 
+/**
+ * Active version tab in the lightbox (ephemeral — not persisted).
+ * Always resets to "regular" when a new image is opened.
+ */
+export const activeVersionAtom = atom<ImageVersion>("regular");

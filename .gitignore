@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Reference only - not for use
+for-reference-only-do-not-use-this-code

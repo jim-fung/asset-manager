@@ -1,8 +1,13 @@
 import { useCallback, useEffect } from "react";
 import { useAtom } from "jotai";
-import { selectedImageAtom, imageStatusMapAtom, imageNotesMapAtom } from "@/store/atoms";
+import {
+  selectedImageAtom,
+  imageStatusMapAtom,
+  imageNotesMapAtom,
+  activeVersionAtom,
+} from "@/store/atoms";
 import { getChapterImages } from "@/data/imageData";
-import type { ImageStatus } from "@/data/imageData";
+import type { ImageStatus, ImageVersion } from "@/data/imageData";
 
 const statusOptions: { value: ImageStatus; label: string }[] = [
   { value: "unset", label: "Unset" },
@@ -11,12 +16,24 @@ const statusOptions: { value: ImageStatus; label: string }[] = [
   { value: "needs-replacement", label: "✕ Needs Replacement" },
 ];
 
+const versionTabs: { value: ImageVersion; label: string; icon: string }[] = [
+  { value: "regular", label: "Regular", icon: "○" },
+  { value: "optimized", label: "Optimised", icon: "◎" },
+  { value: "print", label: "Print Ready", icon: "◉" },
+];
+
 export function ImageLightbox() {
   const [selectedImage, setSelectedImage] = useAtom(selectedImageAtom);
   const [statusMap, setStatusMap] = useAtom(imageStatusMapAtom);
   const [notesMap, setNotesMap] = useAtom(imageNotesMapAtom);
+  const [activeVersion, setActiveVersion] = useAtom(activeVersionAtom);
 
   const close = useCallback(() => setSelectedImage(null), [setSelectedImage]);
+
+  // Reset to regular version whenever a new image is opened
+  useEffect(() => {
+    setActiveVersion("regular");
+  }, [selectedImage?.id, setActiveVersion]);
 
   const chapterImages = selectedImage
     ? getChapterImages(selectedImage.chapterId)
@@ -49,8 +66,27 @@ export function ImageLightbox() {
 
   if (!selectedImage) return null;
 
-  const currentStatus: ImageStatus = (statusMap[selectedImage.id] as ImageStatus) ?? "unset";
+  const currentStatus: ImageStatus =
+    (statusMap[selectedImage.id] as ImageStatus) ?? "unset";
   const currentNotes = notesMap[selectedImage.id] ?? "";
+
+  // Resolve src for the active version tab
+  const versionSrc: string =
+    activeVersion === "optimized"
+      ? (selectedImage.versions.optimized ?? selectedImage.src)
+      : activeVersion === "print"
+        ? (selectedImage.versions.print ?? selectedImage.src)
+        : selectedImage.src;
+
+  // Which version tabs are available for this image
+  const versionAvailable: Record<ImageVersion, boolean> = {
+    regular: true,
+    optimized: Boolean(selectedImage.versions.optimized),
+    print: Boolean(selectedImage.versions.print),
+  };
+
+  const hasAnyAltVersion =
+    versionAvailable.optimized || versionAvailable.print;
 
   return (
     <div className="lightbox-overlay" onClick={close}>
@@ -78,9 +114,48 @@ export function ImageLightbox() {
           </>
         )}
 
+        {/* Version tab bar — always shown so users know versions exist */}
+        <div className="lightbox-version-bar">
+          {versionTabs.map((tab) => {
+            const available = versionAvailable[tab.value];
+            return (
+              <button
+                key={tab.value}
+                className={[
+                  "lightbox-version-tab",
+                  activeVersion === tab.value ? "active" : "",
+                  !available ? "disabled" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => available && setActiveVersion(tab.value)}
+                title={
+                  available
+                    ? `View ${tab.label} version`
+                    : `${tab.label} version not yet available`
+                }
+                disabled={!available}
+              >
+                <span className="lightbox-version-tab-icon">{tab.icon}</span>
+                {tab.label}
+                {!available && (
+                  <span className="lightbox-version-tab-badge">—</span>
+                )}
+              </button>
+            );
+          })}
+          {!hasAnyAltVersion && (
+            <span className="lightbox-version-hint">
+              Add optimised / print paths in imageData.ts to unlock
+            </span>
+          )}
+        </div>
+
         <img
-          src={selectedImage.src}
+          key={`${selectedImage.id}-${activeVersion}`}
+          src={versionSrc}
           alt={selectedImage.caption || selectedImage.filename}
+          className="lightbox-main-image"
         />
       </div>
 
@@ -116,6 +191,25 @@ export function ImageLightbox() {
           <span className="lightbox-meta-value">
             {currentIndex + 1} of {chapterImages.length} in this chapter
           </span>
+        </div>
+
+        {/* Versions overview in the panel */}
+        <div className="lightbox-meta-row">
+          <span className="lightbox-meta-label">Versions</span>
+          <div className="lightbox-versions-panel">
+            {versionTabs.map((tab) => (
+              <div
+                key={tab.value}
+                className={[
+                  "lightbox-versions-panel-item",
+                  versionAvailable[tab.value] ? "available" : "missing",
+                ].join(" ")}
+              >
+                <span className="lightbox-versions-panel-dot" />
+                {tab.label}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="lightbox-meta-row" style={{ border: "none" }}>

@@ -631,15 +631,27 @@ body {
 .lightbox-content {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 40px 40px 24px;
   position: relative;
+  gap: 20px;
 }
 
+.lightbox-main-image {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+  animation: lightbox-img-in 0.3s ease-out;
+}
+
+/* Legacy selector kept for safety */
 .lightbox-content img {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: 72vh;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
@@ -650,6 +662,73 @@ body {
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* ── Version tab bar ── */
+.lightbox-version-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 40px;
+  padding: 5px 8px;
+  flex-shrink: 0;
+}
+
+.lightbox-version-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.lightbox-version-tab:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.lightbox-version-tab.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(176, 107, 34, 0.4);
+}
+
+.lightbox-version-tab.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lightbox-version-tab-icon {
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+.lightbox-version-tab-badge {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.lightbox-version-hint {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
 
 .lightbox-close {
   position: absolute;
@@ -782,6 +861,38 @@ body {
 
 .lightbox-notes-area::placeholder {
   color: var(--color-text-muted);
+}
+
+/* ── Versions panel (in the side panel) ── */
+.lightbox-versions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lightbox-versions-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.lightbox-versions-panel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-unset);
+}
+
+.lightbox-versions-panel-item.available .lightbox-versions-panel-dot {
+  background: var(--color-approved);
+}
+
+.lightbox-versions-panel-item.missing {
+  opacity: 0.45;
 }
 
 /* ── Empty state ── */
