@@ -22,8 +22,10 @@ export function ImageCard({ image, onClick }: ImageCardProps) {
       </div>
       <div className="image-card-info">
         <div className="image-card-filename">{image.filename}</div>
-        {image.caption && (
-          <div className="image-card-caption">{image.caption}</div>
+        {(image.description || image.caption) && (
+          <div className="image-card-description">
+            {image.description || image.caption}
+          </div>
         )}
         <div className="image-card-section">{image.section}</div>
       </div>

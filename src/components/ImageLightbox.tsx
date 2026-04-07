@@ -177,6 +177,15 @@ export function ImageLightbox() {
           <span className="lightbox-meta-value">{selectedImage.section}</span>
         </div>
 
+        {selectedImage.description && (
+          <div className="lightbox-meta-row">
+            <span className="lightbox-meta-label">Description</span>
+            <span className="lightbox-meta-value">
+              {selectedImage.description}
+            </span>
+          </div>
+        )}
+
         {selectedImage.caption && (
           <div className="lightbox-meta-row">
             <span className="lightbox-meta-label">Caption</span>
