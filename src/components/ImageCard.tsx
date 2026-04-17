@@ -8,10 +8,10 @@ interface ImageCardProps {
 }
 
 const statusLabels: Record<ImageStatus, string> = {
-  approved: "Approved",
-  review: "Review",
-  "needs-replacement": "Replace",
-  unset: "Unset",
+  approved: "Goedgekeurd",
+  review: "Te beoordelen",
+  "needs-replacement": "Vervangen",
+  unset: "Niet ingesteld",
 };
 
 export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
@@ -26,7 +26,7 @@ export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
       id={triggerId}
       className="image-card"
       onClick={onClick}
-      aria-label={`Open ${image.filename}`}
+      aria-label={`Openen ${image.filename}`}
     >
       <div className="image-card-thumb">
         <img
@@ -34,7 +34,11 @@ export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
           alt={altText}
           loading="lazy"
         />
-        <div className={`image-card-status ${status}`} title={status} aria-hidden="true" />
+        <div
+          className={`image-card-status ${status}`}
+          title={statusLabels[status]}
+          aria-hidden="true"
+        />
       </div>
       <div className="image-card-info">
         <div className="image-card-filename">{image.filename}</div>

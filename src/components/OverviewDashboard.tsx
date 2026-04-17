@@ -1,9 +1,13 @@
-import { useAtom, useSetAtom } from "jotai";
-import { selectedChapterAtom, openLightboxAtom } from "@/store/atoms";
+import { useEffect } from "react";
+import { useSetAtom } from "jotai";
+import { useNavigate } from "react-router";
 import { chapters, getChapterImages, images } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
+import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
 import { Header } from "@/components/Header";
+import { ImageLightbox } from "@/components/ImageLightbox";
+import { lightboxTriggerIdAtom } from "@/store/atoms";
 
 const imageIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -14,9 +18,11 @@ const imageIcon = (
 );
 
 export function OverviewDashboard() {
-  const [, setSelectedChapter] = useAtom(selectedChapterAtom);
-  const openLightbox = useSetAtom(openLightboxAtom);
+  const navigate = useNavigate();
+  const { imageId, setRouteState } = useSurfaceSearchState("overview");
+  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
   const statusMap = useImageStatuses();
+  const selectedImageId = images.some((img) => img.id === imageId) ? imageId : null;
 
   const statusCounts = images.reduce(
     (acc, img) => {
@@ -28,31 +34,42 @@ export function OverviewDashboard() {
   );
 
   const stats = [
-    { label: "Total Assets", value: images.length, tone: "accent" },
-    { label: "Approved", value: statusCounts.approved || 0, tone: "approved" },
-    { label: "Needs Review", value: statusCounts.review || 0, tone: "review" },
+    { label: "Totaal beelden", value: images.length, tone: "accent" },
+    { label: "Goedgekeurd", value: statusCounts.approved || 0, tone: "approved" },
+    { label: "Te beoordelen", value: statusCounts.review || 0, tone: "review" },
     {
-      label: "Needs Replacement",
+      label: "Te vervangen",
       value: statusCounts["needs-replacement"] || 0,
       tone: "replace",
     },
   ];
 
+  useEffect(() => {
+    if (imageId && !selectedImageId) {
+      setRouteState({ imageId: null }, { replace: true });
+    }
+  }, [imageId, selectedImageId, setRouteState]);
+
+  function openImage(imageId: string, triggerId: string) {
+    setLightboxTriggerId(triggerId);
+    setRouteState({ imageId });
+  }
+
   return (
     <>
       <Header
-        title="Asset Library"
-        subtitle={`${chapters.length} chapters and ${images.length} tracked assets`}
+        title="Beeldbibliotheek"
+        subtitle={`${chapters.length} hoofdstukken en ${images.length} geregistreerde beelden`}
       />
 
       <div className="page-content">
         <section className="overview-hero">
           <div className="overview-copy">
-            <div className="content-section-label">Workspace Overview</div>
-            <h1 className="overview-title">Winston van der Bok archive</h1>
+            <div className="content-section-label">Werkruimteoverzicht</div>
+            <h1 className="overview-title">Archief Winston van der Bok</h1>
             <p className="overview-subtitle">
-              Review print-book assets, move across chapter directories, and inspect
-              digital collections from a single manager workspace.
+              Bekijk boekbeelden, navigeer door hoofdstukmappen en inspecteer
+              digitale collecties vanuit een centrale beheerwerkruimte.
             </p>
           </div>
           <div className="stats-grid">
@@ -68,10 +85,10 @@ export function OverviewDashboard() {
         <section className="content-section">
           <div className="content-section-header">
             <div>
-              <div className="content-section-label">Library</div>
-              <h2 className="content-section-title">Chapter directories</h2>
+              <div className="content-section-label">Bibliotheek</div>
+              <h2 className="content-section-title">Hoofdstukmappen</h2>
             </div>
-            <div className="content-section-meta">{chapters.length} chapters</div>
+            <div className="content-section-meta">{chapters.length} hoofdstukken</div>
           </div>
 
           <div className="chapter-cards-grid">
@@ -84,8 +101,8 @@ export function OverviewDashboard() {
                 key={ch.id}
                 type="button"
                 className="chapter-card"
-                onClick={() => setSelectedChapter(ch.id)}
-                aria-label={`Open ${ch.title}`}
+                onClick={() => navigate(`/book/${ch.id}`)}
+                aria-label={`Openen ${ch.title}`}
               >
                 <div className="chapter-card-preview">
                   {previewImages.map((img, i) => (
@@ -106,13 +123,13 @@ export function OverviewDashboard() {
                 </div>
                 <div className="chapter-card-body">
                   <div className="chapter-card-number">
-                    {ch.number !== null ? `Chapter ${ch.number}` : ch.titleNl}
+                    {ch.number !== null ? `Hoofdstuk ${ch.number}` : ch.title}
                   </div>
                   <div className="chapter-card-title">{ch.title}</div>
                   <div className="chapter-card-desc">{ch.subtitle}</div>
                   <div className="chapter-card-meta">
                     {imageIcon}
-                    <span>{ch.imageCount} images</span>
+                    <span>{ch.imageCount} beelden</span>
                   </div>
                 </div>
               </button>
@@ -124,11 +141,11 @@ export function OverviewDashboard() {
         <section className="content-section">
           <div className="content-section-header">
             <div>
-              <div className="content-section-label">Preview Grid</div>
-              <h2 className="content-section-title">All assets</h2>
+              <div className="content-section-label">Voorvertoningsraster</div>
+              <h2 className="content-section-title">Alle beelden</h2>
             </div>
             <div className="content-section-meta">
-              {images.length} images, opens the shared lightbox
+              {images.length} beelden, opent de gedeelde lightbox
             </div>
           </div>
 
@@ -141,15 +158,9 @@ export function OverviewDashboard() {
                   type="button"
                   id={`overview-image-${img.id}`}
                   className="overview-image-button"
-                  onClick={() =>
-                    openLightbox({
-                      image: img,
-                      items: images,
-                      triggerId: `overview-image-${img.id}`,
-                    })
-                  }
+                  onClick={() => openImage(img.id, `overview-image-${img.id}`)}
                   title={`${img.filename} ${img.section}`}
-                  aria-label={`Open ${img.filename}`}
+                  aria-label={`Openen ${img.filename}`}
                 >
                   <img
                     src={img.preview}
@@ -163,6 +174,13 @@ export function OverviewDashboard() {
           </div>
         </section>
       </div>
+
+      <ImageLightbox
+        items={images}
+        onRequestClose={() => setRouteState({ imageId: null })}
+        onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
+        selectedImageId={selectedImageId}
+      />
     </>
   );
 }

@@ -1,9 +1,16 @@
-import { useAtom, useSetAtom } from "jotai";
-import { selectedChapterAtom, activeSectionAtom, selectedCollectionAtom, mobileSidebarOpenAtom } from "@/store/atoms";
+import { useMemo } from "react";
+import { useSetAtom } from "jotai";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { chapters, images } from "@/data/imageData";
 import { digiCollections, digiFiles } from "@/data/digiFilesData";
 import type { ImageStatus } from "@/data/imageData";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
+import {
+  buildSurfaceSearchString,
+  readLooseRouteSearchState,
+  type RouteSurface,
+} from "@/routeSearch";
+import { mobileSidebarOpenAtom } from "@/store/atoms";
 
 const chapterIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,11 +41,14 @@ const allFilesIcon = (
 );
 
 export function Sidebar() {
-  const [selectedChapter, setSelectedChapter] = useAtom(selectedChapterAtom);
-  const [activeSection, setActiveSection] = useAtom(activeSectionAtom);
-  const [selectedCollection, setSelectedCollection] = useAtom(selectedCollectionAtom);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const statusMap = useImageStatuses();
+  const currentRouteState = useMemo(
+    () => readLooseRouteSearchState(searchParams),
+    [searchParams],
+  );
 
   const statusCounts = images.reduce(
     (acc, img) => {
@@ -49,16 +59,15 @@ export function Sidebar() {
     {} as Record<ImageStatus, number>,
   );
 
-  function goBook(chapterId: string | null) {
-    setActiveSection("book");
-    setSelectedChapter(chapterId);
-    setMobileSidebarOpen(false);
+  function getLinkSearch(targetSurface: RouteSurface) {
+    return buildSurfaceSearchString(targetSurface, {
+      ...currentRouteState,
+      imageId: null,
+    });
   }
 
-  function goDigiFiles(collectionId: string | null) {
-    setActiveSection("digi-files");
-    setSelectedCollection(collectionId);
-    setMobileSidebarOpen(false);
+  function isActive(pathname: string, expectedPath: string) {
+    return pathname === expectedPath;
   }
 
   return (
@@ -69,32 +78,35 @@ export function Sidebar() {
         </div>
         <div className="sidebar-brand-copy">
           <div className="sidebar-logo">Winston van der Bok</div>
-          <div className="sidebar-logo-sub">Image Asset Manager</div>
+          <div className="sidebar-logo-sub">Beeldbeheer</div>
         </div>
       </div>
 
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">Library</div>
+        <div className="sidebar-section-label">Bibliotheek</div>
 
-        <button
-          type="button"
-          className={`sidebar-item ${activeSection === "book" && selectedChapter === null ? "active" : ""}`}
-          onClick={() => goBook(null)}
-          title="Overview"
+        <Link
+          className={`sidebar-item ${isActive(location.pathname, "/") ? "active" : ""}`}
+          onClick={() => setMobileSidebarOpen(false)}
+          title="Overzicht"
+          to="/"
         >
           {homeIcon}
-          <span className="sidebar-item-label">Overview</span>
-        </button>
+          <span className="sidebar-item-label">Overzicht</span>
+        </Link>
 
-        <div className="sidebar-section-label">Chapters</div>
+        <div className="sidebar-section-label">Hoofdstukken</div>
 
         {chapters.map((ch) => (
-          <button
+          <Link
             key={ch.id}
-            type="button"
-            className={`sidebar-item ${activeSection === "book" && selectedChapter === ch.id ? "active" : ""}`}
-            onClick={() => goBook(ch.id)}
+            className={`sidebar-item ${isActive(location.pathname, `/book/${ch.id}`) ? "active" : ""}`}
+            onClick={() => setMobileSidebarOpen(false)}
             title={ch.title}
+            to={{
+              pathname: `/book/${ch.id}`,
+              search: getLinkSearch("book"),
+            }}
           >
             {chapterIcon}
             <span className="sidebar-item-label">
@@ -102,45 +114,51 @@ export function Sidebar() {
               {ch.title}
             </span>
             <span className="sidebar-item-count">{ch.imageCount}</span>
-          </button>
+          </Link>
         ))}
 
-        <div className="sidebar-section-label">Digital Files</div>
+        <div className="sidebar-section-label">Digitale bestanden</div>
 
-        <button
-          type="button"
-          className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === null ? "active" : ""}`}
-          onClick={() => goDigiFiles(null)}
-          title="All Collections"
+        <Link
+          className={`sidebar-item ${isActive(location.pathname, "/digi-files") ? "active" : ""}`}
+          onClick={() => setMobileSidebarOpen(false)}
+          title="Alle collecties"
+          to={{
+            pathname: "/digi-files",
+            search: getLinkSearch("digi"),
+          }}
         >
           {allFilesIcon}
-          <span className="sidebar-item-label">All Collections</span>
+          <span className="sidebar-item-label">Alle collecties</span>
           <span className="sidebar-item-count">{digiFiles.length}</span>
-        </button>
+        </Link>
 
         {digiCollections.map((col) => (
-          <button
+          <Link
             key={col.id}
-            type="button"
-            className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === col.id ? "active" : ""}`}
-            onClick={() => goDigiFiles(col.id)}
+            className={`sidebar-item ${isActive(location.pathname, `/digi-files/${col.id}`) ? "active" : ""}`}
+            onClick={() => setMobileSidebarOpen(false)}
             title={col.label}
+            to={{
+              pathname: `/digi-files/${col.id}`,
+              search: getLinkSearch("digi"),
+            }}
           >
             {folderIcon}
             <span className="sidebar-item-label">{col.label}</span>
             <span className="sidebar-item-count">{col.fileCount}</span>
-          </button>
+          </Link>
         ))}
       </nav>
 
       <div className="sidebar-stats">
         <div className="sidebar-stat-row">
-          <span className="sidebar-stat-label">Total images</span>
+          <span className="sidebar-stat-label">Totaal beelden</span>
           <span className="sidebar-stat-value">{images.length}</span>
         </div>
         <div className="sidebar-stat-row">
           <span className="sidebar-stat-label" style={{ color: "var(--color-approved)" }}>
-            Approved
+            Goedgekeurd
           </span>
           <span className="sidebar-stat-value" style={{ color: "var(--color-approved)" }}>
             {statusCounts.approved || 0}
@@ -148,7 +166,7 @@ export function Sidebar() {
         </div>
         <div className="sidebar-stat-row">
           <span className="sidebar-stat-label" style={{ color: "var(--color-review)" }}>
-            Review
+            Te beoordelen
           </span>
           <span className="sidebar-stat-value" style={{ color: "var(--color-review)" }}>
             {statusCounts.review || 0}
@@ -156,7 +174,7 @@ export function Sidebar() {
         </div>
         <div className="sidebar-stat-row">
           <span className="sidebar-stat-label" style={{ color: "var(--color-needs-replacement)" }}>
-            Replace
+            Vervangen
           </span>
           <span className="sidebar-stat-value" style={{ color: "var(--color-needs-replacement)" }}>
             {statusCounts["needs-replacement"] || 0}

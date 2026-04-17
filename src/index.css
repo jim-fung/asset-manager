@@ -233,6 +233,7 @@ body {
   cursor: pointer;
   appearance: none;
   text-align: left;
+  text-decoration: none;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),

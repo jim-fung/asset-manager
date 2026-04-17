@@ -1,6 +1,5 @@
-import { useDeferredValue, useMemo, useState } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { selectedCollectionAtom, openLightboxAtom } from "@/store/atoms";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useSetAtom } from "jotai";
 import {
   digiCollections,
   digiFiles,
@@ -9,7 +8,10 @@ import {
   digiFileToImageAsset,
   type DigiFile,
 } from "@/data/digiFilesData";
+import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { Header } from "@/components/Header";
+import { ImageLightbox } from "@/components/ImageLightbox";
+import { lightboxTriggerIdAtom } from "@/store/atoms";
 
 // - SVG Icons -
 
@@ -37,18 +39,20 @@ const listIcon = (
 
 // - DigiFilesView -
 
-export function DigiFilesView() {
-  const [selectedCollection] = useAtom(selectedCollectionAtom);
-  const openLightbox = useSetAtom(openLightboxAtom);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const deferredSearchQuery = useDeferredValue(searchQuery);
+interface DigiFilesViewProps {
+  collectionId: string | null;
+}
 
-  const collection = selectedCollection ? getCollection(selectedCollection) : null;
+export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
+  const { imageId, q, setRouteState, view } = useSurfaceSearchState("digi");
+  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
+  const deferredSearchQuery = useDeferredValue(q);
+
+  const collection = collectionId ? getCollection(collectionId) : null;
 
   // Which files to show
-  const sourceFiles = selectedCollection
-    ? getCollectionFiles(selectedCollection)
+  const sourceFiles = collectionId
+    ? getCollectionFiles(collectionId)
     : digiFiles;
 
   // Filter by search
@@ -72,12 +76,26 @@ export function DigiFilesView() {
       })),
     [filteredFiles],
   );
+  const selectedImageId = filteredEntries.some((entry) => entry.asset.id === imageId)
+    ? imageId
+    : null;
 
-  const title = collection ? collection.label : "Digital Files";
+  const title = collection ? collection.label : "Digitale bestanden";
   const subtitle = collection
     ? collection.description
-    : `${digiFiles.length} files across ${digiCollections.length} collections`;
-  const scopeLabel = collection ? "Collection workspace" : "Digital archive";
+    : `${digiFiles.length} bestanden in ${digiCollections.length} collecties`;
+  const scopeLabel = collection ? "Collectiewerkruimte" : "Digitaal archief";
+
+  useEffect(() => {
+    if (imageId && !selectedImageId) {
+      setRouteState({ imageId: null }, { replace: true });
+    }
+  }, [imageId, selectedImageId, setRouteState]);
+
+  function openImage(nextImageId: string, triggerId: string) {
+    setLightboxTriggerId(triggerId);
+    setRouteState({ imageId: nextImageId });
+  }
 
   return (
     <>
@@ -88,29 +106,29 @@ export function DigiFilesView() {
             id="digi-files-search"
             name="digi-files-search"
             type="text"
-            aria-label="Search digital files"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Zoek digitale bestanden"
+            placeholder="Zoeken"
+            value={q}
+            onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
           />
         </div>
 
         <div className="view-toggle">
           <button
             type="button"
-            className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-            onClick={() => setViewMode("grid")}
-            title="Grid view"
-            aria-pressed={viewMode === "grid"}
+            className={`view-toggle-btn ${view === "grid" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "grid" })}
+            title="Rasterweergave"
+            aria-pressed={view === "grid"}
           >
             {gridIcon}
           </button>
           <button
             type="button"
-            className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-            onClick={() => setViewMode("list")}
-            title="List view"
-            aria-pressed={viewMode === "list"}
+            className={`view-toggle-btn ${view === "list" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "list" })}
+            title="Lijstweergave"
+            aria-pressed={view === "list"}
           >
             {listIcon}
           </button>
@@ -123,22 +141,22 @@ export function DigiFilesView() {
           <div className="view-summary-copy">
             <div className="content-section-label">{scopeLabel}</div>
             <h2 className="view-summary-title">
-              {collection ? collection.label : "Digital collection explorer"}
+              {collection ? collection.label : "Verkenner digitale collecties"}
             </h2>
             <p className="view-summary-text">{subtitle}</p>
           </div>
           <div className="view-summary-stats">
             <div className="view-summary-stat">
-              <span>Visible</span>
+              <span>Zichtbaar</span>
               <strong>{filteredFiles.length}</strong>
             </div>
             <div className="view-summary-stat">
-              <span>Total</span>
+              <span>Totaal</span>
               <strong>{sourceFiles.length}</strong>
             </div>
             <div className="view-summary-stat">
-              <span>Mode</span>
-              <strong>{viewMode === "grid" ? "Grid" : "List"}</strong>
+              <span>Weergave</span>
+              <strong>{view === "grid" ? "Raster" : "Lijst"}</strong>
             </div>
           </div>
         </section>
@@ -146,39 +164,40 @@ export function DigiFilesView() {
         <section className="content-section">
           <div className="content-section-header">
             <div>
-              <div className="content-section-label">Results</div>
-              <h2 className="content-section-title">Digital assets</h2>
+              <div className="content-section-label">Resultaten</div>
+              <h2 className="content-section-title">Digitale beelden</h2>
             </div>
             <div className="content-section-meta">
-              Uses preview-ready assets across grid and lightbox
+              Gebruikt preview-assets in raster en lightbox
             </div>
           </div>
 
           {filteredFiles.length > 0 ? (
-            <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
+            <div className={`image-grid ${view === "list" ? "list-mode" : ""}`}>
               {filteredEntries.map(({ file, asset }) => (
                 <DigiFileCard
                   key={file.id}
                   file={file}
                   triggerId={`digi-file-${file.id}`}
-                  onClick={() =>
-                    openLightbox({
-                      image: asset,
-                      items: filteredEntries.map((entry) => entry.asset),
-                      triggerId: `digi-file-${file.id}`,
-                    })
-                  }
+                  onClick={() => openImage(asset.id, `digi-file-${file.id}`)}
                 />
               ))}
             </div>
           ) : (
             <div className="empty-state">
               <div className="empty-state-icon"></div>
-              <div className="empty-state-text">No files match your search</div>
+              <div className="empty-state-text">Geen bestanden komen overeen met je zoekopdracht</div>
             </div>
           )}
         </section>
       </div>
+
+      <ImageLightbox
+        items={filteredEntries.map((entry) => entry.asset)}
+        onRequestClose={() => setRouteState({ imageId: null })}
+        onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
+        selectedImageId={selectedImageId}
+      />
     </>
   );
 }
@@ -194,7 +213,7 @@ interface DigiFileCardProps {
 function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
   const [imgError, setImgError] = useState(false);
   const col = getCollection(file.collectionId);
-  const altText = col ? `${file.filename} from ${col.label}` : file.filename;
+  const altText = col ? `${file.filename} uit ${col.label}` : file.filename;
 
   return (
     <button
@@ -202,12 +221,12 @@ function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
       id={triggerId}
       className="image-card"
       onClick={onClick}
-      aria-label={`Open ${file.filename}`}
+      aria-label={`Openen ${file.filename}`}
     >
       <div className="image-card-thumb">
         {imgError ? (
           <div className="image-card-placeholder">
-            No preview
+            Geen preview
           </div>
         ) : (
           <img

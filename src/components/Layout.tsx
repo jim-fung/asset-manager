@@ -25,14 +25,14 @@ export function Layout({ sidebar, children }: LayoutProps) {
         type="button"
         className="sidebar-overlay" 
         onClick={() => setIsMobileOpen(false)}
-        aria-label="Close navigation"
+        aria-label="Navigatie sluiten"
       />
-      <aside className="app-sidebar" aria-label="Primary navigation">
+      <aside className="app-sidebar" aria-label="Hoofdnavigatie">
         <button 
           type="button"
           className="mobile-close-btn"
           onClick={() => setIsMobileOpen(false)}
-          aria-label="Close menu"
+          aria-label="Menu sluiten"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />

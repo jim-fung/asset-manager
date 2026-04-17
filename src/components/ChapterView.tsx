@@ -1,11 +1,13 @@
-import { useDeferredValue, useMemo } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { searchQueryAtom, filterStatusAtom, viewModeAtom, openLightboxAtom } from "@/store/atoms";
+import { useDeferredValue, useEffect, useMemo } from "react";
+import { useSetAtom } from "jotai";
 import { getChapter, getChapterImages } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
+import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { Header } from "@/components/Header";
 import { ImageCard } from "@/components/ImageCard";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { lightboxTriggerIdAtom } from "@/store/atoms";
 
 const searchIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,22 +36,20 @@ interface ChapterViewProps {
 }
 
 const statusFilters: Array<{ value: ImageStatus | null; label: string }> = [
-  { value: null, label: "All" },
-  { value: "approved", label: "Approved" },
-  { value: "review", label: "Review" },
-  { value: "needs-replacement", label: "Replace" },
-  { value: "unset", label: "Unset" },
+  { value: null, label: "Alles" },
+  { value: "approved", label: "Goedgekeurd" },
+  { value: "review", label: "Te beoordelen" },
+  { value: "needs-replacement", label: "Vervangen" },
+  { value: "unset", label: "Niet ingesteld" },
 ];
 
 export function ChapterView({ chapterId }: ChapterViewProps) {
   const chapter = getChapter(chapterId);
   const allChapterImages = getChapterImages(chapterId);
-  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
-  const [filterStatus, setFilterStatus] = useAtom(filterStatusAtom);
-  const [viewMode, setViewMode] = useAtom(viewModeAtom);
-  const openLightbox = useSetAtom(openLightboxAtom);
+  const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
+  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
   const statusMap = useImageStatuses();
-  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const deferredSearchQuery = useDeferredValue(q);
 
   const filteredImages = useMemo(() => {
     const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
@@ -64,25 +64,39 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         return false;
       }
 
-      if (!filterStatus) {
+      if (!status) {
         return true;
       }
 
-      const status = statusMap[img.id] ?? "unset";
-      return status === filterStatus;
+      const imageStatus = statusMap[img.id] ?? "unset";
+      return imageStatus === status;
     });
-  }, [allChapterImages, deferredSearchQuery, filterStatus, statusMap]);
+  }, [allChapterImages, deferredSearchQuery, status, statusMap]);
 
   const activeFilterLabel =
-    statusFilters.find((filter) => filter.value === filterStatus)?.label ?? "All";
+    statusFilters.find((filter) => filter.value === status)?.label ?? "Alles";
+  const selectedImageId = filteredImages.some((img) => img.id === imageId) ? imageId : null;
 
-  if (!chapter) return null;
+  useEffect(() => {
+    if (imageId && !selectedImageId) {
+      setRouteState({ imageId: null }, { replace: true });
+    }
+  }, [imageId, selectedImageId, setRouteState]);
+
+  function openImage(nextImageId: string, triggerId: string) {
+    setLightboxTriggerId(triggerId);
+    setRouteState({ imageId: nextImageId });
+  }
+
+  if (!chapter) {
+    return null;
+  }
 
   return (
     <>
       <Header 
-        title={`${chapter.number !== null ? `Chapter ${chapter.number}: ` : ""}${chapter.title}`}
-        subtitle={chapter.titleNl}
+        title={`${chapter.number !== null ? `Hoofdstuk ${chapter.number}: ` : ""}${chapter.title}`}
+        subtitle={chapter.subtitle}
       >
         <div className="search-bar">
           {searchIcon}
@@ -90,10 +104,10 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
             id="chapter-search"
             name="chapter-search"
             type="text"
-            aria-label="Search chapter images"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Zoek hoofdstukbeelden"
+            placeholder="Zoeken"
+            value={q}
+            onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
           />
         </div>
 
@@ -102,9 +116,9 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
             <button
               key={f.label}
               type="button"
-              className={`filter-pill ${filterStatus === f.value ? "active" : ""}`}
-              onClick={() => setFilterStatus(filterStatus === f.value ? null : f.value)}
-              aria-pressed={filterStatus === f.value}
+              className={`filter-pill ${status === f.value ? "active" : ""}`}
+              onClick={() => setRouteState({ status: status === f.value ? null : f.value })}
+              aria-pressed={status === f.value}
             >
               {f.label}
             </button>
@@ -114,19 +128,19 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         <div className="view-toggle">
           <button
             type="button"
-            className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
-            onClick={() => setViewMode("grid")}
-            title="Grid view"
-            aria-pressed={viewMode === "grid"}
+            className={`view-toggle-btn ${view === "grid" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "grid" })}
+            title="Rasterweergave"
+            aria-pressed={view === "grid"}
           >
             {gridIcon}
           </button>
           <button
             type="button"
-            className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-            onClick={() => setViewMode("list")}
-            title="List view"
-            aria-pressed={viewMode === "list"}
+            className={`view-toggle-btn ${view === "list" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "list" })}
+            title="Lijstweergave"
+            aria-pressed={view === "list"}
           >
             {listIcon}
           </button>
@@ -137,19 +151,19 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
       <div className="page-content">
         <section className="view-summary">
           <div className="view-summary-copy">
-            <div className="content-section-label">Chapter Workspace</div>
-            <h2 className="view-summary-title">{chapter.titleNl}</h2>
+            <div className="content-section-label">Hoofdstukwerkruimte</div>
+            <h2 className="view-summary-title">{chapter.title}</h2>
             {chapter.subtitle && (
               <p className="view-summary-text">{chapter.subtitle}</p>
             )}
           </div>
           <div className="view-summary-stats">
             <div className="view-summary-stat">
-              <span>Visible</span>
+              <span>Zichtbaar</span>
               <strong>{filteredImages.length}</strong>
             </div>
             <div className="view-summary-stat">
-              <span>Total</span>
+              <span>Totaal</span>
               <strong>{allChapterImages.length}</strong>
             </div>
             <div className="view-summary-stat">
@@ -162,28 +176,22 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         <section className="content-section">
           <div className="content-section-header">
             <div>
-              <div className="content-section-label">Results</div>
-              <h2 className="content-section-title">Asset results</h2>
+              <div className="content-section-label">Resultaten</div>
+              <h2 className="content-section-title">Beeldresultaten</h2>
             </div>
             <div className="content-section-meta">
-              {viewMode === "grid" ? "Grid workspace" : "List workspace"}
+              {view === "grid" ? "Rasterweergave" : "Lijstweergave"}
             </div>
           </div>
 
           {filteredImages.length > 0 ? (
-            <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
+            <div className={`image-grid ${view === "list" ? "list-mode" : ""}`}>
               {filteredImages.map((img) => (
                 <ImageCard
                   key={img.id}
                   image={img}
                   triggerId={`chapter-image-${img.id}`}
-                  onClick={() =>
-                    openLightbox({
-                      image: img,
-                      items: filteredImages,
-                      triggerId: `chapter-image-${img.id}`,
-                    })
-                  }
+                  onClick={() => openImage(img.id, `chapter-image-${img.id}`)}
                 />
               ))}
             </div>
@@ -191,12 +199,19 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
             <div className="empty-state">
               <div className="empty-state-icon"></div>
               <div className="empty-state-text">
-                No images match your filters
+                Geen beelden komen overeen met je filters
               </div>
             </div>
           )}
         </section>
       </div>
+
+      <ImageLightbox
+        items={filteredImages}
+        onRequestClose={() => setRouteState({ imageId: null })}
+        onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
+        selectedImageId={selectedImageId}
+      />
     </>
   );
 }

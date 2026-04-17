@@ -1,3 +1,5 @@
+import { translateArchiveTextToDutch } from "./archiveTextNl";
+
 /** Status of an image in the book production pipeline */
 export type ImageStatus = "approved" | "review" | "needs-replacement" | "unset";
 
@@ -50,43 +52,43 @@ export const chapters: Chapter[] = [
   {
     id: "voorwoord",
     number: null,
-    title: "Foreword",
+    title: "Voorwoord",
     titleNl: "Voorwoord",
-    subtitle: "Opening reflections on Winston's life and legacy",
+    subtitle: "Openende beschouwingen over Winstons leven en nalatenschap",
     imageCount: 0,
   },
   {
     id: "inleiding",
     number: null,
-    title: "Introduction",
+    title: "Inleiding - Een labyrint van wegen",
     titleNl: "Inleiding - Een labyrint van wegen",
-    subtitle: "A labyrinth of paths - the journey begins",
+    subtitle: "Een labyrint van paden - de reis begint",
     imageCount: 0,
   },
   {
     id: "hoofdstuk-1",
     number: 1,
-    title: "The Kalihna Culture",
+    title: "De Kalihna-cultuur",
     titleNl: "De Kalihna Cultuur",
     subtitle:
-      "Origins, ceremonies, rituals, music, and the Epekodonoh mourning tradition",
+      "Oorsprong, ceremonies, rituelen, muziek en de rouwtraditie van Epekodonoh",
     imageCount: 0,
   },
   {
     id: "hoofdstuk-2",
     number: 2,
-    title: "Childhood Between Worlds",
+    title: "Kinderjaren tussen werelden",
     titleNl: "Kinderjaren tussen werelden",
     subtitle:
-      "From Calbo to Paramaribo - foster mothers and early formation",
+      "Van Calbo naar Paramaribo - pleegmoeders en vroege vorming",
     imageCount: 0,
   },
   {
     id: "hoofdstuk-3",
     number: 3,
-    title: "Return to Suriname",
+    title: "Terug in Suriname",
     titleNl: "Terug in Suriname",
-    subtitle: "Reconnecting with roots and rediscovering identity",
+    subtitle: "Opnieuw verbinding maken met wortels en identiteit herontdekken",
     imageCount: 0,
   },
   {
@@ -94,33 +96,33 @@ export const chapters: Chapter[] = [
     number: 4,
     title: "Waka Tjopu",
     titleNl: "Waka Tjopu",
-    subtitle: "The dugout canoe - journeys on the rivers of Suriname",
+    subtitle: "De uitgeholde kano - reizen over de rivieren van Suriname",
     imageCount: 0,
   },
   {
     id: "hoofdstuk-5",
     number: 5,
-    title: "Artist & Entrepreneur",
+    title: "Zelfstandig ondernemer, kunstenaar, vriend, docent",
     titleNl: "Zelfstandig ondernemer, kunstenaar, vriend, docent",
     subtitle:
-      "Graphic design, friendships, the 1492 commission, and art as community service",
+      "Grafisch ontwerp, vriendschappen, de 1492-opdracht en kunst als gemeenschapsdienst",
     imageCount: 0,
   },
   {
     id: "hoofdstuk-6",
     number: 6,
-    title: "Life and Death",
+    title: "Op leven en dood",
     titleNl: "Op leven en dood",
     subtitle:
-      "The Monument of the Indigenous Peoples, Ingi Sten, and Winston's passing",
+      "Het Monument der Inheemsen, Ingi Sten en Winstons overlijden",
     imageCount: 0,
   },
   {
     id: "epiloog",
     number: null,
-    title: "Epilogue",
+    title: "Epiloog - Mijn Epekodonoh",
     titleNl: "Epiloog - Mijn Epekodonoh",
-    subtitle: "Julia's farewell poem - \"My Epekodonoh\"",
+    subtitle: "Julia's afscheidsgedicht - \"Mijn Epekodonoh\"",
     imageCount: 0,
   },
 ];
@@ -145,10 +147,10 @@ function img(
     },
     chapter: chapters.find((c) => c.id === chapterId)?.title ?? chapterId,
     chapterId,
-    section,
-    caption,
-    alt,
-    description,
+    section: translateArchiveTextToDutch(section),
+    caption: translateArchiveTextToDutch(caption),
+    alt: translateArchiveTextToDutch(alt),
+    description: translateArchiveTextToDutch(description),
     status: "unset",
     notes: "",
   };

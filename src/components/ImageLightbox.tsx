@@ -5,29 +5,33 @@ import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
   activeVersionAtom,
-  closeLightboxAtom,
   imageNotesMapAtom,
   imageStatusMapAtom,
-  lightboxItemsAtom,
   lightboxTriggerIdAtom,
-  selectedImageAtom,
 } from "@/store/atoms";
-import type { ImageStatus, ImageVersion } from "@/data/imageData";
+import type { ImageAsset, ImageStatus, ImageVersion } from "@/data/imageData";
+
+interface ImageLightboxProps {
+  items: ImageAsset[];
+  onRequestClose: () => void;
+  onRequestSelectImage: (image: ImageAsset) => void;
+  selectedImageId: string | null;
+}
 
 const statusOptions: { value: ImageStatus; label: string }[] = [
-  { value: "unset", label: "Unset" },
-  { value: "approved", label: "Approved" },
-  { value: "review", label: "Needs Review" },
-  { value: "needs-replacement", label: "Needs Replacement" },
+  { value: "unset", label: "Niet ingesteld" },
+  { value: "approved", label: "Goedgekeurd" },
+  { value: "review", label: "Te beoordelen" },
+  { value: "needs-replacement", label: "Vervangen" },
 ];
 
 const versionTabs: { value: ImageVersion; label: string; icon: string }[] = [
-  { value: "regular", label: "Regular", icon: "" },
-  { value: "optimized", label: "Optimised", icon: "" },
-  { value: "print", label: "Print Ready", icon: "" },
+  { value: "regular", label: "Standaard", icon: "" },
+  { value: "optimized", label: "Geoptimaliseerd", icon: "" },
+  { value: "print", label: "Drukklaar", icon: "" },
 ];
 
 const focusableSelector = [
@@ -60,21 +64,27 @@ function isTextInput(target: EventTarget | null): boolean {
   );
 }
 
-export function ImageLightbox() {
-  const [selectedImage, setSelectedImage] = useAtom(selectedImageAtom);
+export function ImageLightbox({
+  items,
+  onRequestClose,
+  onRequestSelectImage,
+  selectedImageId,
+}: ImageLightboxProps) {
   const [statusMap, setStatusMap] = useAtom(imageStatusMapAtom);
   const [notesMap, setNotesMap] = useAtom(imageNotesMapAtom);
   const [activeVersion, setActiveVersion] = useAtom(activeVersionAtom);
-  const lightboxItems = useAtomValue(lightboxItemsAtom);
   const lightboxTriggerId = useAtomValue(lightboxTriggerIdAtom);
-  const closeLightbox = useSetAtom(closeLightboxAtom);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const fallbackFocusRef = useRef<HTMLElement | null>(null);
+  const selectedImage = useMemo(
+    () => items.find((item) => item.id === selectedImageId) ?? null,
+    [items, selectedImageId],
+  );
 
   const close = useCallback(() => {
-    closeLightbox();
-  }, [closeLightbox]);
+    onRequestClose();
+  }, [onRequestClose]);
 
   useEffect(() => {
     if (!selectedImage) {
@@ -84,38 +94,23 @@ export function ImageLightbox() {
     setActiveVersion("regular");
   }, [selectedImage, setActiveVersion]);
 
-  const visibleItems = useMemo(() => {
-    if (!selectedImage) {
-      return [];
-    }
-
-    if (!lightboxItems.length) {
-      return [selectedImage];
-    }
-
-    return lightboxItems.some((item) => item.id === selectedImage.id)
-      ? lightboxItems
-      : [selectedImage];
-  }, [lightboxItems, selectedImage]);
-
   const currentIndex = selectedImage
     ? Math.max(
-        visibleItems.findIndex((item) => item.id === selectedImage.id),
+        items.findIndex((item) => item.id === selectedImage.id),
         0,
       )
     : -1;
 
   const goTo = useCallback(
     (delta: number) => {
-      if (!visibleItems.length) {
+      if (!items.length || currentIndex === -1) {
         return;
       }
 
-      const nextIndex =
-        (currentIndex + delta + visibleItems.length) % visibleItems.length;
-      setSelectedImage(visibleItems[nextIndex]);
+      const nextIndex = (currentIndex + delta + items.length) % items.length;
+      onRequestSelectImage(items[nextIndex]);
     },
-    [currentIndex, setSelectedImage, visibleItems],
+    [currentIndex, items, onRequestSelectImage],
   );
 
   useEffect(() => {
@@ -239,7 +234,7 @@ export function ImageLightbox() {
       onKeyDown={handleKeyDown}
       role="dialog"
       aria-modal="true"
-      aria-label={`${selectedImage.filename} details`}
+      aria-label={`Details van ${selectedImage.filename}`}
     >
       <div className="lightbox-content" onClick={(event) => event.stopPropagation()}>
         <button
@@ -247,7 +242,7 @@ export function ImageLightbox() {
           type="button"
           className="lightbox-close"
           onClick={close}
-          title="Close (Esc)"
+          title="Sluiten (Esc)"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -255,7 +250,7 @@ export function ImageLightbox() {
           </svg>
         </button>
 
-        {visibleItems.length > 1 && (
+        {items.length > 1 && (
           <>
             <button
               type="button"
@@ -264,7 +259,7 @@ export function ImageLightbox() {
                 event.stopPropagation();
                 goTo(-1);
               }}
-              title="Previous"
+              title="Vorige"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
@@ -277,7 +272,7 @@ export function ImageLightbox() {
                 event.stopPropagation();
                 goTo(1);
               }}
-              title="Next"
+              title="Volgende"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
@@ -304,8 +299,8 @@ export function ImageLightbox() {
                   onClick={() => available && setActiveVersion(tab.value)}
                   title={
                     available
-                      ? `View ${tab.label} version`
-                      : `${tab.label} version not yet available`
+                      ? `Bekijk versie: ${tab.label}`
+                      : `Versie ${tab.label} is nog niet beschikbaar`
                   }
                   disabled={!available}
                   aria-pressed={activeVersion === tab.value}
@@ -335,18 +330,18 @@ export function ImageLightbox() {
         <h2 className="lightbox-panel-title">{selectedImage.filename}</h2>
 
         <div className="lightbox-meta-row">
-          <span className="lightbox-meta-label">Chapter</span>
+          <span className="lightbox-meta-label">Hoofdstuk</span>
           <span className="lightbox-meta-value">{selectedImage.chapter}</span>
         </div>
 
         <div className="lightbox-meta-row">
-          <span className="lightbox-meta-label">Section</span>
+          <span className="lightbox-meta-label">Sectie</span>
           <span className="lightbox-meta-value">{selectedImage.section}</span>
         </div>
 
         {selectedImage.description && (
           <div className="lightbox-meta-row">
-            <span className="lightbox-meta-label">Description</span>
+            <span className="lightbox-meta-label">Beschrijving</span>
             <span className="lightbox-meta-value">
               {selectedImage.description}
             </span>
@@ -355,7 +350,7 @@ export function ImageLightbox() {
 
         {selectedImage.caption && (
           <div className="lightbox-meta-row">
-            <span className="lightbox-meta-label">Caption</span>
+            <span className="lightbox-meta-label">Bijschrift</span>
             <span className="lightbox-meta-value">
               {selectedImage.caption}
             </span>
@@ -363,15 +358,15 @@ export function ImageLightbox() {
         )}
 
         <div className="lightbox-meta-row">
-          <span className="lightbox-meta-label">Position</span>
+          <span className="lightbox-meta-label">Positie</span>
           <span className="lightbox-meta-value">
-            {currentIndex + 1} of {visibleItems.length} in current results
+            {currentIndex + 1} van {items.length} in huidige resultaten
           </span>
         </div>
 
         {hasAnyAltVersion && (
           <div className="lightbox-meta-row">
-            <span className="lightbox-meta-label">Versions</span>
+            <span className="lightbox-meta-label">Versies</span>
             <div className="lightbox-versions-panel">
               {versionTabs.map((tab) => (
                 <div
@@ -415,13 +410,13 @@ export function ImageLightbox() {
 
         <div className="lightbox-form-row">
           <label className="lightbox-meta-label" htmlFor="lightbox-notes">
-            Notes
+            Notities
           </label>
           <textarea
             id="lightbox-notes"
             name="lightbox-notes"
             className="lightbox-notes-area"
-            placeholder="Add production notes"
+            placeholder="Voeg productienotities toe"
             value={currentNotes}
             onChange={(event) =>
               setNotesMap((prev) => ({

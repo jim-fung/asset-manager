@@ -93,31 +93,31 @@ export const digiCollections: DigiCollection[] = [
   {
     id: "expo-spice-quiest",
     label: "Expo Spice Quiest (JPEG)",
-    description: "JPEG files from the Expo Spice Quiest series",
+    description: "JPEG-bestanden uit de serie Expo Spice Quiest",
     fileCount: expoSpiceQuiestFiles.length,
   },
   {
     id: "repros-b",
     label: "Repro's B (JPEG)",
-    description: "Repro JPEG files, set B",
+    description: "Repro-JPEG-bestanden, set B",
     fileCount: reprosBFiles.length,
   },
   {
     id: "readytex-ingi-sten",
     label: "Readytex Ingi Sten",
-    description: "Readytex Expo / Ingi Sten - converted from high-res TIFF originals",
+    description: "Readytex Expo / Ingi Sten - omgezet vanuit TIFF-originelen met hoge resolutie",
     fileCount: readytexFiles.length,
   },
   {
     id: "wvdbk-jpeg-a",
     label: "Repro's WVDBK A (JPEG)",
-    description: "Winston van der Bok repro photographs, set A",
+    description: "Reprofoto's van Winston van der Bok, set A",
     fileCount: wvdbkJpegAFiles.length,
   },
   {
     id: "tiff-expo-spice-quiest",
     label: "Expo Spice Quiest (TIFF)",
-    description: "High-res TIFF originals from the Expo Spice Quiest series, converted to JPEG",
+    description: "TIFF-originelen met hoge resolutie uit de serie Expo Spice Quiest, omgezet naar JPEG",
     fileCount: tiffExpoSpiceQuiestFiles.length,
   },
 ];
@@ -161,7 +161,7 @@ export function digiFileToImageAsset(file: DigiFile): ImageAsset {
     alt: file.filename,
     description:
       file.originalFormat === "tiff"
-        ? "Prepared from TIFF-origin source material"
+        ? "Voorbereid vanuit bronmateriaal met TIFF-oorsprong"
         : "",
     status: "unset",
     notes: "",
