@@ -1,5 +1,6 @@
-import { useAtom } from "jotai";
-import { searchQueryAtom, filterStatusAtom, viewModeAtom, selectedImageAtom } from "@/store/atoms";
+import { useDeferredValue, useMemo } from "react";
+import { useAtom, useSetAtom } from "jotai";
+import { searchQueryAtom, filterStatusAtom, viewModeAtom, openLightboxAtom } from "@/store/atoms";
 import { getChapter, getChapterImages } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
 import { Header } from "@/components/Header";
@@ -46,30 +47,36 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
   const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
   const [filterStatus, setFilterStatus] = useAtom(filterStatusAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
-  const [, setSelectedImage] = useAtom(selectedImageAtom);
+  const openLightbox = useSetAtom(openLightboxAtom);
   const statusMap = useImageStatuses();
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const filteredImages = useMemo(() => {
+    const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
+
+    return allChapterImages.filter((img) => {
+      if (
+        trimmedQuery &&
+        !img.filename.toLowerCase().includes(trimmedQuery) &&
+        !img.caption.toLowerCase().includes(trimmedQuery) &&
+        !img.section.toLowerCase().includes(trimmedQuery)
+      ) {
+        return false;
+      }
+
+      if (!filterStatus) {
+        return true;
+      }
+
+      const status = statusMap[img.id] ?? "unset";
+      return status === filterStatus;
+    });
+  }, [allChapterImages, deferredSearchQuery, filterStatus, statusMap]);
+
+  const activeFilterLabel =
+    statusFilters.find((filter) => filter.value === filterStatus)?.label ?? "All";
 
   if (!chapter) return null;
-
-  // Apply filters
-  let filteredImages = allChapterImages;
-
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase();
-    filteredImages = filteredImages.filter(
-      (img) =>
-        img.filename.toLowerCase().includes(q) ||
-        img.caption.toLowerCase().includes(q) ||
-        img.section.toLowerCase().includes(q),
-    );
-  }
-
-  if (filterStatus) {
-    filteredImages = filteredImages.filter((img) => {
-      const s = statusMap[img.id] ?? "unset";
-      return s === filterStatus;
-    });
-  }
 
   return (
     <>
@@ -80,7 +87,10 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         <div className="search-bar">
           {searchIcon}
           <input
+            id="chapter-search"
+            name="chapter-search"
             type="text"
+            aria-label="Search chapter images"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -91,8 +101,10 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           {statusFilters.map((f) => (
             <button
               key={f.label}
+              type="button"
               className={`filter-pill ${filterStatus === f.value ? "active" : ""}`}
               onClick={() => setFilterStatus(filterStatus === f.value ? null : f.value)}
+              aria-pressed={filterStatus === f.value}
             >
               {f.label}
             </button>
@@ -101,16 +113,20 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
 
         <div className="view-toggle">
           <button
+            type="button"
             className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
             onClick={() => setViewMode("grid")}
             title="Grid view"
+            aria-pressed={viewMode === "grid"}
           >
             {gridIcon}
           </button>
           <button
+            type="button"
             className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
             onClick={() => setViewMode("list")}
             title="List view"
+            aria-pressed={viewMode === "list"}
           >
             {listIcon}
           </button>
@@ -119,26 +135,67 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
 
       {/* Content */}
       <div className="page-content">
-        {chapter.subtitle && (
-          <p style={{ color: "var(--color-text-secondary)", marginBottom: 24, fontSize: "0.88rem", lineHeight: 1.6, maxWidth: 680 }}>
-            {chapter.subtitle}
-          </p>
-        )}
-
-        {filteredImages.length > 0 ? (
-          <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
-            {filteredImages.map((img) => (
-              <ImageCard key={img.id} image={img} onClick={() => setSelectedImage(img)} />
-            ))}
+        <section className="view-summary">
+          <div className="view-summary-copy">
+            <div className="content-section-label">Chapter Workspace</div>
+            <h2 className="view-summary-title">{chapter.titleNl}</h2>
+            {chapter.subtitle && (
+              <p className="view-summary-text">{chapter.subtitle}</p>
+            )}
           </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon"></div>
-            <div className="empty-state-text">
-              No images match your filters
+          <div className="view-summary-stats">
+            <div className="view-summary-stat">
+              <span>Visible</span>
+              <strong>{filteredImages.length}</strong>
+            </div>
+            <div className="view-summary-stat">
+              <span>Total</span>
+              <strong>{allChapterImages.length}</strong>
+            </div>
+            <div className="view-summary-stat">
+              <span>Filter</span>
+              <strong>{activeFilterLabel}</strong>
             </div>
           </div>
-        )}
+        </section>
+
+        <section className="content-section">
+          <div className="content-section-header">
+            <div>
+              <div className="content-section-label">Results</div>
+              <h2 className="content-section-title">Asset results</h2>
+            </div>
+            <div className="content-section-meta">
+              {viewMode === "grid" ? "Grid workspace" : "List workspace"}
+            </div>
+          </div>
+
+          {filteredImages.length > 0 ? (
+            <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
+              {filteredImages.map((img) => (
+                <ImageCard
+                  key={img.id}
+                  image={img}
+                  triggerId={`chapter-image-${img.id}`}
+                  onClick={() =>
+                    openLightbox({
+                      image: img,
+                      items: filteredImages,
+                      triggerId: `chapter-image-${img.id}`,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon"></div>
+              <div className="empty-state-text">
+                No images match your filters
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </>
   );

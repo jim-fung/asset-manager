@@ -4,7 +4,7 @@ import { HomePage } from "@/pages/Home";
 
 export function App() {
   return (
-    <Theme appearance="light" accentColor="amber" grayColor="sand" radius="medium" scaling="100%">
+    <Theme appearance="light" accentColor="sky" grayColor="slate" radius="small" scaling="100%">
       <Routes>
         <Route path="/" element={<HomePage />} />
       </Routes>

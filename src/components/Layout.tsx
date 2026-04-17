@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { mobileSidebarOpenAtom } from "@/store/atoms";
+import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
 import type { ReactNode } from "react";
 
 interface LayoutProps {
@@ -9,15 +9,27 @@ interface LayoutProps {
 
 export function Layout({ sidebar, children }: LayoutProps) {
   const [isMobileOpen, setIsMobileOpen] = useAtom(mobileSidebarOpenAtom);
+  const [isSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
 
   return (
-    <div className={`app-layout ${isMobileOpen ? "mobile-sidebar-open" : ""}`}>
-      <div 
+    <div
+      className={[
+        "app-layout",
+        isMobileOpen ? "mobile-sidebar-open" : "",
+        isSidebarCollapsed ? "sidebar-collapsed" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <button
+        type="button"
         className="sidebar-overlay" 
         onClick={() => setIsMobileOpen(false)}
+        aria-label="Close navigation"
       />
-      <aside className="app-sidebar">
+      <aside className="app-sidebar" aria-label="Primary navigation">
         <button 
+          type="button"
           className="mobile-close-btn"
           onClick={() => setIsMobileOpen(false)}
           aria-label="Close menu"

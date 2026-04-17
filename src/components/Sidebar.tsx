@@ -1,5 +1,5 @@
-import { useAtom } from "jotai";
-import { selectedChapterAtom, activeSectionAtom, selectedCollectionAtom } from "@/store/atoms";
+import { useAtom, useSetAtom } from "jotai";
+import { selectedChapterAtom, activeSectionAtom, selectedCollectionAtom, mobileSidebarOpenAtom } from "@/store/atoms";
 import { chapters, images } from "@/data/imageData";
 import { digiCollections, digiFiles } from "@/data/digiFilesData";
 import type { ImageStatus } from "@/data/imageData";
@@ -37,6 +37,7 @@ export function Sidebar() {
   const [selectedChapter, setSelectedChapter] = useAtom(selectedChapterAtom);
   const [activeSection, setActiveSection] = useAtom(activeSectionAtom);
   const [selectedCollection, setSelectedCollection] = useAtom(selectedCollectionAtom);
+  const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const statusMap = useImageStatuses();
 
   const statusCounts = images.reduce(
@@ -51,28 +52,38 @@ export function Sidebar() {
   function goBook(chapterId: string | null) {
     setActiveSection("book");
     setSelectedChapter(chapterId);
+    setMobileSidebarOpen(false);
   }
 
   function goDigiFiles(collectionId: string | null) {
     setActiveSection("digi-files");
     setSelectedCollection(collectionId);
+    setMobileSidebarOpen(false);
   }
 
   return (
     <>
       <div className="sidebar-header">
-        <div className="sidebar-logo">Winston van der Bok</div>
-        <div className="sidebar-logo-sub">Image Asset Manager</div>
+        <div className="sidebar-brand-mark" aria-hidden="true">
+          WV
+        </div>
+        <div className="sidebar-brand-copy">
+          <div className="sidebar-logo">Winston van der Bok</div>
+          <div className="sidebar-logo-sub">Image Asset Manager</div>
+        </div>
       </div>
 
       <nav className="sidebar-nav">
-        {/* - Book section - */}
+        <div className="sidebar-section-label">Library</div>
+
         <button
+          type="button"
           className={`sidebar-item ${activeSection === "book" && selectedChapter === null ? "active" : ""}`}
           onClick={() => goBook(null)}
+          title="Overview"
         >
           {homeIcon}
-          <span>Overview</span>
+          <span className="sidebar-item-label">Overview</span>
         </button>
 
         <div className="sidebar-section-label">Chapters</div>
@@ -80,11 +91,13 @@ export function Sidebar() {
         {chapters.map((ch) => (
           <button
             key={ch.id}
+            type="button"
             className={`sidebar-item ${activeSection === "book" && selectedChapter === ch.id ? "active" : ""}`}
             onClick={() => goBook(ch.id)}
+            title={ch.title}
           >
             {chapterIcon}
-            <span>
+            <span className="sidebar-item-label">
               {ch.number !== null ? `${ch.number}. ` : ""}
               {ch.title}
             </span>
@@ -92,26 +105,29 @@ export function Sidebar() {
           </button>
         ))}
 
-        {/* - Digital Files section - */}
-        <div className="sidebar-section-label" style={{ marginTop: 16 }}>Digital Files</div>
+        <div className="sidebar-section-label">Digital Files</div>
 
         <button
+          type="button"
           className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === null ? "active" : ""}`}
           onClick={() => goDigiFiles(null)}
+          title="All Collections"
         >
           {allFilesIcon}
-          <span>All Collections</span>
+          <span className="sidebar-item-label">All Collections</span>
           <span className="sidebar-item-count">{digiFiles.length}</span>
         </button>
 
         {digiCollections.map((col) => (
           <button
             key={col.id}
+            type="button"
             className={`sidebar-item ${activeSection === "digi-files" && selectedCollection === col.id ? "active" : ""}`}
             onClick={() => goDigiFiles(col.id)}
+            title={col.label}
           >
             {folderIcon}
-            <span>{col.label}</span>
+            <span className="sidebar-item-label">{col.label}</span>
             <span className="sidebar-item-count">{col.fileCount}</span>
           </button>
         ))}
