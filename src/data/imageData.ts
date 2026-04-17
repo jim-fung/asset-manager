@@ -6,7 +6,7 @@ export type ImageVersion = "regular" | "optimized" | "print";
 
 /** The three possible versions of a single image */
 export interface ImageVersions {
-  /** Original unaltered file - always present, used for all thumbnails */
+  /** Canonical served asset - always present */
   regular: string;
   /** Web-optimised export (compressed, resized for screen) */
   optimized?: string;
@@ -18,7 +18,9 @@ export interface ImageVersions {
 export interface ImageAsset {
   id: string;
   filename: string;
-  /** Canonical src - always the regular (original) file. Used for all thumbnails. */
+  /** Lightweight preview used for dashboards and grids */
+  preview: string;
+  /** Canonical src for the lightbox and any consumers that need the served asset */
   src: string;
   /** All available version paths for this image */
   versions: ImageVersions;
@@ -131,17 +133,15 @@ function img(
   alt: string = "",
   description: string = "",
 ): ImageAsset {
-  const regular = `/images/book/${filename}`;
+  const preview = `/previews/book/${filename.replace(/\.[^.]+$/, ".jpg")}`;
   return {
     id: filename.replace(/\.\w+$/, ""),
     filename,
-    src: regular,
+    preview,
+    src: preview,
     versions: {
-      regular,
-      // Optimized and print paths follow the convention below.
-      // Uncomment and adjust once the files are in place:
-      // optimized: `/images/book/optimized/${filename}`,
-      // print: `/images/book/print/${filename}`,
+      regular: preview,
+      // Future alternate variants can still be supplied explicitly if needed.
     },
     chapter: chapters.find((c) => c.id === chapterId)?.title ?? chapterId,
     chapterId,

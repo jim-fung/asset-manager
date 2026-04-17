@@ -1,7 +1,7 @@
 /**
  * Data registry for the WeTransfer digital files collection.
- * Files are copied to public/digi-files/<collection-id>/ for clean URL paths.
- * TIFF originals have been converted to JPEG for browser preview.
+ * Files are served from preview-ready assets under public/previews/digi-files/<collection-id>.
+ * TIFF-origin material is represented here as prepared JPEG previews.
  */
 
 import type { ImageAsset } from "./imageData";
@@ -17,7 +17,9 @@ export interface DigiCollection {
 export interface DigiFile {
   id: string;
   filename: string;
-  /** Browser-accessible path, e.g. /digi-files/expo-spice-quiest/_DSC2252.jpg */
+  /** Lightweight preview used for browsing large digi collections */
+  preview: string;
+  /** Browser-accessible canonical asset path */
   src: string;
   collectionId: string;
   originalFormat: "jpeg" | "tiff";
@@ -28,10 +30,12 @@ function makeFile(
   collectionId: string,
   originalFormat: "jpeg" | "tiff" = "jpeg",
 ): DigiFile {
+  const preview = `/previews/digi-files/${collectionId}/${filename.replace(/\.[^.]+$/, ".jpg")}`;
   return {
     id: `${collectionId}__${filename}`,
     filename,
-    src: `/digi-files/${collectionId}/${encodeURIComponent(filename)}`,
+    preview,
+    src: preview,
     collectionId,
     originalFormat,
   };
@@ -147,8 +151,9 @@ export function digiFileToImageAsset(file: DigiFile): ImageAsset {
   return {
     id: file.id,
     filename: file.filename,
-    src: file.src,
-    versions: { regular: file.src },
+    preview: file.preview,
+    src: file.preview,
+    versions: { regular: file.preview },
     chapter: col?.label ?? file.collectionId,
     chapterId: file.collectionId,
     section: col?.label ?? "",
@@ -156,10 +161,9 @@ export function digiFileToImageAsset(file: DigiFile): ImageAsset {
     alt: file.filename,
     description:
       file.originalFormat === "tiff"
-        ? "Converted from high-res TIFF original"
+        ? "Prepared from TIFF-origin source material"
         : "",
     status: "unset",
     notes: "",
   };
 }
-

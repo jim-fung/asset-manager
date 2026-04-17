@@ -1,21 +1,27 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { useAtom } from "jotai";
 import {
-  selectedImageAtom,
-  imageStatusMapAtom,
-  imageNotesMapAtom,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import {
   activeVersionAtom,
-  activeSectionAtom,
+  closeLightboxAtom,
+  imageNotesMapAtom,
+  imageStatusMapAtom,
+  lightboxItemsAtom,
+  lightboxTriggerIdAtom,
+  selectedImageAtom,
 } from "@/store/atoms";
-import { getChapterImages } from "@/data/imageData";
-import { getCollectionFiles, digiFileToImageAsset } from "@/data/digiFilesData";
 import type { ImageStatus, ImageVersion } from "@/data/imageData";
 
 const statusOptions: { value: ImageStatus; label: string }[] = [
   { value: "unset", label: "Unset" },
-  { value: "approved", label: " Approved" },
-  { value: "review", label: " Needs Review" },
-  { value: "needs-replacement", label: " Needs Replacement" },
+  { value: "approved", label: "Approved" },
+  { value: "review", label: "Needs Review" },
+  { value: "needs-replacement", label: "Needs Replacement" },
 ];
 
 const versionTabs: { value: ImageVersion; label: string; icon: string }[] = [
@@ -24,76 +30,198 @@ const versionTabs: { value: ImageVersion; label: string; icon: string }[] = [
   { value: "print", label: "Print Ready", icon: "" },
 ];
 
+const focusableSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "textarea:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(", ");
+
+function getFocusableElements(root: HTMLElement | null): HTMLElement[] {
+  if (!root) {
+    return [];
+  }
+
+  return Array.from(root.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+    (element) =>
+      !element.hasAttribute("disabled") &&
+      element.getAttribute("aria-hidden") !== "true",
+  );
+}
+
+function isTextInput(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLElement && target.isContentEditable)
+  );
+}
+
 export function ImageLightbox() {
   const [selectedImage, setSelectedImage] = useAtom(selectedImageAtom);
   const [statusMap, setStatusMap] = useAtom(imageStatusMapAtom);
   const [notesMap, setNotesMap] = useAtom(imageNotesMapAtom);
   const [activeVersion, setActiveVersion] = useAtom(activeVersionAtom);
-  const [activeSection] = useAtom(activeSectionAtom);
+  const lightboxItems = useAtomValue(lightboxItemsAtom);
+  const lightboxTriggerId = useAtomValue(lightboxTriggerIdAtom);
+  const closeLightbox = useSetAtom(closeLightboxAtom);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const fallbackFocusRef = useRef<HTMLElement | null>(null);
 
-  const close = useCallback(() => setSelectedImage(null), [setSelectedImage]);
+  const close = useCallback(() => {
+    closeLightbox();
+  }, [closeLightbox]);
 
-  // Reset to regular version whenever a new image is opened
   useEffect(() => {
-    setActiveVersion("regular");
-  }, [selectedImage?.id, setActiveVersion]);
-
-  // Get current sequence for navigation
-  const chapterImages = useMemo(() => {
-    if (!selectedImage) return [];
-    
-    // If we're in 'digi-files' section, get images from the digital collection registry
-    if (activeSection === 'digi-files') {
-      const files = getCollectionFiles(selectedImage.chapterId);
-      // Map back to ImageAsset for consistency in the lightbox UI
-      return files.map(f => digiFileToImageAsset(f));
+    if (!selectedImage) {
+      return;
     }
-    
-    return getChapterImages(selectedImage.chapterId);
-  }, [selectedImage, activeSection]);
+
+    setActiveVersion("regular");
+  }, [selectedImage, setActiveVersion]);
+
+  const visibleItems = useMemo(() => {
+    if (!selectedImage) {
+      return [];
+    }
+
+    if (!lightboxItems.length) {
+      return [selectedImage];
+    }
+
+    return lightboxItems.some((item) => item.id === selectedImage.id)
+      ? lightboxItems
+      : [selectedImage];
+  }, [lightboxItems, selectedImage]);
 
   const currentIndex = selectedImage
-    ? chapterImages.findIndex((i) => i.id === selectedImage.id)
+    ? Math.max(
+        visibleItems.findIndex((item) => item.id === selectedImage.id),
+        0,
+      )
     : -1;
-
 
   const goTo = useCallback(
     (delta: number) => {
-      if (!chapterImages.length) return;
-      const next =
-        (currentIndex + delta + chapterImages.length) % chapterImages.length;
-      setSelectedImage(chapterImages[next]);
+      if (!visibleItems.length) {
+        return;
+      }
+
+      const nextIndex =
+        (currentIndex + delta + visibleItems.length) % visibleItems.length;
+      setSelectedImage(visibleItems[nextIndex]);
     },
-    [chapterImages, currentIndex, setSelectedImage],
+    [currentIndex, setSelectedImage, visibleItems],
   );
 
-  // Keyboard navigation
   useEffect(() => {
-    if (!selectedImage) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") goTo(-1);
-      if (e.key === "ArrowRight") goTo(1);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [selectedImage, close, goTo]);
+    if (!selectedImage) {
+      return;
+    }
 
-  if (!selectedImage) return null;
+    fallbackFocusRef.current =
+      (document.activeElement as HTMLElement | null) ?? null;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const frame = window.requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+
+      const triggerElement = lightboxTriggerId
+        ? (document.getElementById(lightboxTriggerId) as HTMLElement | null)
+        : null;
+
+      (triggerElement ?? fallbackFocusRef.current)?.focus?.();
+    };
+  }, [lightboxTriggerId, selectedImage]);
+
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusableElements = getFocusableElements(overlayRef.current);
+
+        if (!focusableElements.length) {
+          event.preventDefault();
+          return;
+        }
+
+        const currentElement = document.activeElement as HTMLElement | null;
+        const currentPosition = focusableElements.findIndex(
+          (element) => element === currentElement,
+        );
+
+        if (event.shiftKey) {
+          const previousPosition =
+            currentPosition <= 0
+              ? focusableElements.length - 1
+              : currentPosition - 1;
+          focusableElements[previousPosition]?.focus();
+          event.preventDefault();
+          return;
+        }
+
+        const nextPosition =
+          currentPosition === -1 || currentPosition === focusableElements.length - 1
+            ? 0
+            : currentPosition + 1;
+        focusableElements[nextPosition]?.focus();
+        event.preventDefault();
+        return;
+      }
+
+      if (isTextInput(event.target)) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goTo(-1);
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goTo(1);
+      }
+    },
+    [close, goTo],
+  );
+
+  if (!selectedImage) {
+    return null;
+  }
 
   const currentStatus: ImageStatus =
     (statusMap[selectedImage.id] as ImageStatus) ?? "unset";
   const currentNotes = notesMap[selectedImage.id] ?? "";
+  const altText =
+    selectedImage.alt ||
+    selectedImage.description ||
+    selectedImage.caption ||
+    selectedImage.filename;
 
-  // Resolve src for the active version tab
-  const versionSrc: string =
+  const versionSrc =
     activeVersion === "optimized"
       ? (selectedImage.versions.optimized ?? selectedImage.src)
       : activeVersion === "print"
         ? (selectedImage.versions.print ?? selectedImage.src)
         : selectedImage.src;
 
-  // Which version tabs are available for this image
   const versionAvailable: Record<ImageVersion, boolean> = {
     regular: true,
     optimized: Boolean(selectedImage.versions.optimized),
@@ -104,20 +232,38 @@ export function ImageLightbox() {
     versionAvailable.optimized || versionAvailable.print;
 
   return (
-    <div className="lightbox-overlay" onClick={close}>
-      <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-        <button className="lightbox-close" onClick={close} title="Close (Esc)">
+    <div
+      ref={overlayRef}
+      className="lightbox-overlay"
+      onClick={close}
+      onKeyDown={handleKeyDown}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${selectedImage.filename} details`}
+    >
+      <div className="lightbox-content" onClick={(event) => event.stopPropagation()}>
+        <button
+          ref={closeButtonRef}
+          type="button"
+          className="lightbox-close"
+          onClick={close}
+          title="Close (Esc)"
+        >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
 
-        {chapterImages.length > 1 && (
+        {visibleItems.length > 1 && (
           <>
             <button
+              type="button"
               className="lightbox-nav prev"
-              onClick={(e) => { e.stopPropagation(); goTo(-1); }}
+              onClick={(event) => {
+                event.stopPropagation();
+                goTo(-1);
+              }}
               title="Previous"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -125,8 +271,12 @@ export function ImageLightbox() {
               </svg>
             </button>
             <button
+              type="button"
               className="lightbox-nav next"
-              onClick={(e) => { e.stopPropagation(); goTo(1); }}
+              onClick={(event) => {
+                event.stopPropagation();
+                goTo(1);
+              }}
               title="Next"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,58 +286,53 @@ export function ImageLightbox() {
           </>
         )}
 
-        {/* Version tab bar  always shown so users know versions exist */}
-        <div className="lightbox-version-bar">
-          {versionTabs.map((tab) => {
-            const available = versionAvailable[tab.value];
-            return (
-              <button
-                key={tab.value}
-                className={[
-                  "lightbox-version-tab",
-                  activeVersion === tab.value ? "active" : "",
-                  !available ? "disabled" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => available && setActiveVersion(tab.value)}
-                title={
-                  available
-                    ? `View ${tab.label} version`
-                    : `${tab.label} version not yet available`
-                }
-                disabled={!available}
-              >
-                <span className="lightbox-version-tab-icon">{tab.icon}</span>
-                {tab.label}
-                {!available && (
-                  <span className="lightbox-version-tab-badge"></span>
-                )}
-              </button>
-            );
-          })}
-          {!hasAnyAltVersion && (
-            <span className="lightbox-version-hint">
-              Add optimised / print paths in imageData.ts to unlock
-            </span>
-          )}
-        </div>
+        {hasAnyAltVersion && (
+          <div className="lightbox-version-bar">
+            {versionTabs.map((tab) => {
+              const available = versionAvailable[tab.value];
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  className={[
+                    "lightbox-version-tab",
+                    activeVersion === tab.value ? "active" : "",
+                    !available ? "disabled" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => available && setActiveVersion(tab.value)}
+                  title={
+                    available
+                      ? `View ${tab.label} version`
+                      : `${tab.label} version not yet available`
+                  }
+                  disabled={!available}
+                  aria-pressed={activeVersion === tab.value}
+                >
+                  <span className="lightbox-version-tab-icon" aria-hidden="true">
+                    {tab.icon}
+                  </span>
+                  {tab.label}
+                  {!available && (
+                    <span className="lightbox-version-tab-badge" aria-hidden="true"></span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <img
           key={`${selectedImage.id}-${activeVersion}`}
           src={versionSrc}
-          alt={selectedImage.caption || selectedImage.filename}
+          alt={altText}
           className="lightbox-main-image"
         />
       </div>
 
-      <div className="lightbox-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="lightbox-panel-title">Image Details</div>
-
-        <div className="lightbox-meta-row">
-          <span className="lightbox-meta-label">Filename</span>
-          <span className="lightbox-meta-value">{selectedImage.filename}</span>
-        </div>
+      <div className="lightbox-panel" onClick={(event) => event.stopPropagation()}>
+        <h2 className="lightbox-panel-title">{selectedImage.filename}</h2>
 
         <div className="lightbox-meta-row">
           <span className="lightbox-meta-label">Chapter</span>
@@ -220,64 +365,68 @@ export function ImageLightbox() {
         <div className="lightbox-meta-row">
           <span className="lightbox-meta-label">Position</span>
           <span className="lightbox-meta-value">
-            {currentIndex + 1} of {chapterImages.length} in this chapter
+            {currentIndex + 1} of {visibleItems.length} in current results
           </span>
         </div>
 
-        {/* Versions overview in the panel */}
-        <div className="lightbox-meta-row">
-          <span className="lightbox-meta-label">Versions</span>
-          <div className="lightbox-versions-panel">
-            {versionTabs.map((tab) => (
-              <div
-                key={tab.value}
-                className={[
-                  "lightbox-versions-panel-item",
-                  versionAvailable[tab.value] ? "available" : "missing",
-                ].join(" ")}
-              >
-                <span className="lightbox-versions-panel-dot" />
-                {tab.label}
-              </div>
-            ))}
+        {hasAnyAltVersion && (
+          <div className="lightbox-meta-row">
+            <span className="lightbox-meta-label">Versions</span>
+            <div className="lightbox-versions-panel">
+              {versionTabs.map((tab) => (
+                <div
+                  key={tab.value}
+                  className={[
+                    "lightbox-versions-panel-item",
+                    versionAvailable[tab.value] ? "available" : "missing",
+                  ].join(" ")}
+                >
+                  <span className="lightbox-versions-panel-dot" aria-hidden="true" />
+                  {tab.label}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="lightbox-meta-row" style={{ border: "none" }}>
-          <span className="lightbox-meta-label">Status</span>
+        <div className="lightbox-meta-row lightbox-form-row">
+          <label className="lightbox-meta-label" htmlFor="lightbox-status-select">
+            Status
+          </label>
           <select
+            id="lightbox-status-select"
+            name="lightbox-status"
             className="lightbox-status-select"
             value={currentStatus}
-            onChange={(e) =>
+            onChange={(event) =>
               setStatusMap((prev) => ({
                 ...prev,
-                [selectedImage.id]: e.target.value as ImageStatus,
+                [selectedImage.id]: event.target.value as ImageStatus,
               }))
             }
           >
-            {statusOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
         </div>
 
-        <div>
-          <span
-            className="lightbox-meta-label"
-            style={{ display: "block", marginBottom: 6 }}
-          >
+        <div className="lightbox-form-row">
+          <label className="lightbox-meta-label" htmlFor="lightbox-notes">
             Notes
-          </span>
+          </label>
           <textarea
+            id="lightbox-notes"
+            name="lightbox-notes"
             className="lightbox-notes-area"
             placeholder="Add production notes"
             value={currentNotes}
-            onChange={(e) =>
+            onChange={(event) =>
               setNotesMap((prev) => ({
                 ...prev,
-                [selectedImage.id]: e.target.value,
+                [selectedImage.id]: event.target.value,
               }))
             }
           />

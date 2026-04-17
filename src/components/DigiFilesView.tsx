@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
-import { selectedCollectionAtom, selectedImageAtom } from "@/store/atoms";
+import { selectedCollectionAtom, openLightboxAtom } from "@/store/atoms";
 import {
   digiCollections,
   digiFiles,
@@ -39,9 +39,10 @@ const listIcon = (
 
 export function DigiFilesView() {
   const [selectedCollection] = useAtom(selectedCollectionAtom);
-  const setSelectedImage = useSetAtom(selectedImageAtom);
+  const openLightbox = useSetAtom(openLightboxAtom);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const collection = selectedCollection ? getCollection(selectedCollection) : null;
 
@@ -51,16 +52,32 @@ export function DigiFilesView() {
     : digiFiles;
 
   // Filter by search
-  const filteredFiles = searchQuery.trim()
-    ? sourceFiles.filter((f) =>
-        f.filename.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : sourceFiles;
+  const filteredFiles = useMemo(() => {
+    const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
+
+    if (!trimmedQuery) {
+      return sourceFiles;
+    }
+
+    return sourceFiles.filter((file) =>
+      file.filename.toLowerCase().includes(trimmedQuery),
+    );
+  }, [deferredSearchQuery, sourceFiles]);
+
+  const filteredEntries = useMemo(
+    () =>
+      filteredFiles.map((file) => ({
+        file,
+        asset: digiFileToImageAsset(file),
+      })),
+    [filteredFiles],
+  );
 
   const title = collection ? collection.label : "Digital Files";
   const subtitle = collection
     ? collection.description
     : `${digiFiles.length} files across ${digiCollections.length} collections`;
+  const scopeLabel = collection ? "Collection workspace" : "Digital archive";
 
   return (
     <>
@@ -68,7 +85,10 @@ export function DigiFilesView() {
         <div className="search-bar">
           {searchIcon}
           <input
+            id="digi-files-search"
+            name="digi-files-search"
             type="text"
+            aria-label="Search digital files"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -77,16 +97,20 @@ export function DigiFilesView() {
 
         <div className="view-toggle">
           <button
+            type="button"
             className={`view-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
             onClick={() => setViewMode("grid")}
             title="Grid view"
+            aria-pressed={viewMode === "grid"}
           >
             {gridIcon}
           </button>
           <button
+            type="button"
             className={`view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
             onClick={() => setViewMode("list")}
             title="List view"
+            aria-pressed={viewMode === "list"}
           >
             {listIcon}
           </button>
@@ -95,22 +119,65 @@ export function DigiFilesView() {
 
       {/* Content */}
       <div className="page-content">
-        {filteredFiles.length > 0 ? (
-          <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
-            {filteredFiles.map((file) => (
-              <DigiFileCard
-                key={file.id}
-                file={file}
-                onClick={() => setSelectedImage(digiFileToImageAsset(file))}
-              />
-            ))}
+        <section className="view-summary">
+          <div className="view-summary-copy">
+            <div className="content-section-label">{scopeLabel}</div>
+            <h2 className="view-summary-title">
+              {collection ? collection.label : "Digital collection explorer"}
+            </h2>
+            <p className="view-summary-text">{subtitle}</p>
           </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon"></div>
-            <div className="empty-state-text">No files match your search</div>
+          <div className="view-summary-stats">
+            <div className="view-summary-stat">
+              <span>Visible</span>
+              <strong>{filteredFiles.length}</strong>
+            </div>
+            <div className="view-summary-stat">
+              <span>Total</span>
+              <strong>{sourceFiles.length}</strong>
+            </div>
+            <div className="view-summary-stat">
+              <span>Mode</span>
+              <strong>{viewMode === "grid" ? "Grid" : "List"}</strong>
+            </div>
           </div>
-        )}
+        </section>
+
+        <section className="content-section">
+          <div className="content-section-header">
+            <div>
+              <div className="content-section-label">Results</div>
+              <h2 className="content-section-title">Digital assets</h2>
+            </div>
+            <div className="content-section-meta">
+              Uses preview-ready assets across grid and lightbox
+            </div>
+          </div>
+
+          {filteredFiles.length > 0 ? (
+            <div className={`image-grid ${viewMode === "list" ? "list-mode" : ""}`}>
+              {filteredEntries.map(({ file, asset }) => (
+                <DigiFileCard
+                  key={file.id}
+                  file={file}
+                  triggerId={`digi-file-${file.id}`}
+                  onClick={() =>
+                    openLightbox({
+                      image: asset,
+                      items: filteredEntries.map((entry) => entry.asset),
+                      triggerId: `digi-file-${file.id}`,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-state-icon"></div>
+              <div className="empty-state-text">No files match your search</div>
+            </div>
+          )}
+        </section>
       </div>
     </>
   );
@@ -121,38 +188,48 @@ export function DigiFilesView() {
 interface DigiFileCardProps {
   file: DigiFile;
   onClick: () => void;
+  triggerId: string;
 }
 
-function DigiFileCard({ file, onClick }: DigiFileCardProps) {
+function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
   const [imgError, setImgError] = useState(false);
   const col = getCollection(file.collectionId);
+  const altText = col ? `${file.filename} from ${col.label}` : file.filename;
 
   return (
-    <div className="image-card" onClick={onClick} role="button" tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}>
+    <button
+      type="button"
+      id={triggerId}
+      className="image-card"
+      onClick={onClick}
+      aria-label={`Open ${file.filename}`}
+    >
       <div className="image-card-thumb">
         {imgError ? (
-          <div className="image-card-placeholder" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+          <div className="image-card-placeholder">
             No preview
           </div>
         ) : (
           <img
-            src={file.src}
-            alt={file.filename}
+            src={file.preview}
+            alt={altText}
             loading="lazy"
             onError={() => setImgError(true)}
           />
         )}
         {file.originalFormat === "tiff" && (
-          <span className="image-card-status-badge" style={{ position: "absolute", top: 6, left: 6, background: "var(--color-accent)", color: "#fff", fontSize: "0.65rem", padding: "2px 6px", borderRadius: 4, fontWeight: 600, letterSpacing: "0.04em" }}>
+          <span className="image-card-status-badge">
             TIFF-JPG
           </span>
         )}
       </div>
       <div className="image-card-info">
         <div className="image-card-filename">{file.filename}</div>
-        {col && <div className="image-card-chapter">{col.label}</div>}
+        <div className="image-card-meta-row">
+          {col && <div className="image-card-chapter">{col.label}</div>}
+          <div className="image-card-format">{file.originalFormat.toUpperCase()}</div>
+        </div>
       </div>
-    </div>
+    </button>
   );
 }
