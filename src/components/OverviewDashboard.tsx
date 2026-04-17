@@ -71,6 +71,17 @@ export function OverviewDashboard() {
               Bekijk boekbeelden, navigeer door hoofdstukmappen en inspecteer
               digitale collecties vanuit een centrale beheerwerkruimte.
             </p>
+            <p className="overview-explainer">
+              Deze omgeving is bedoeld als redactiewerkruimte voor het boekarchief:
+              je gebruikt haar om beeldselecties per hoofdstuk snel terug te vinden,
+              beoordelingen en notities vast te leggen, en bronmateriaal uit de
+              digitale mappen naast het boekmateriaal te controleren.
+            </p>
+            <div className="overview-purpose-list" aria-label="Doel van deze werkruimte">
+              <span className="overview-purpose-item">Hoofdstukken vergelijken en doorlopen</span>
+              <span className="overview-purpose-item">Beelden markeren voor controle of vervanging</span>
+              <span className="overview-purpose-item">Digitale collecties koppelen aan het boekproject</span>
+            </div>
           </div>
           <div className="stats-grid">
             {stats.map((stat) => (
