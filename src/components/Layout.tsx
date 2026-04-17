@@ -1,5 +1,7 @@
 import { useAtom } from "jotai";
+import { IconButton } from "@radix-ui/themes";
 import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
+import { CloseIcon } from "@/components/Icons";
 import type { ReactNode } from "react";
 
 interface LayoutProps {
@@ -23,22 +25,22 @@ export function Layout({ sidebar, children }: LayoutProps) {
     >
       <button
         type="button"
-        className="sidebar-overlay" 
+        className="sidebar-overlay"
         onClick={() => setIsMobileOpen(false)}
         aria-label="Navigatie sluiten"
       />
       <aside className="app-sidebar" aria-label="Hoofdnavigatie">
-        <button 
+        <IconButton
           type="button"
+          variant="soft"
+          color="gray"
+          size="2"
           className="mobile-close-btn"
           onClick={() => setIsMobileOpen(false)}
           aria-label="Menu sluiten"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+          <CloseIcon />
+        </IconButton>
         {sidebar}
       </aside>
       <main className="app-main">{children}</main>

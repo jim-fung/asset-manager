@@ -399,186 +399,46 @@ body {
   flex-wrap: wrap;
 }
 
-.desktop-sidebar-btn,
-.mobile-menu-btn {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.86);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.desktop-sidebar-btn:hover,
-.mobile-menu-btn:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-primary);
-}
-
+/* Sidebar toggle / mobile hamburger — Radix IconButton owns visual styling;
+   we only handle responsive visibility here. */
 .mobile-menu-btn,
 .mobile-close-btn {
-  display: none;
+  display: none; /* hidden on desktop */
 }
 
+/* The mobile close button sits in the sidebar's top-right corner */
 .mobile-close-btn {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  box-shadow: var(--shadow-soft);
 }
 
-.mobile-close-btn:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
-}
-
-.search-bar {
+/* Search field — Radix TextField.Root */
+.header-search-field {
   flex: 1 1 280px;
   min-width: 220px;
   max-width: 420px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-.search-bar svg {
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.search-bar input {
-  width: 100%;
-  background: none;
-  border: 0;
-  outline: none;
-  color: var(--color-text-primary);
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
-.search-bar input::placeholder {
-  color: var(--color-text-muted);
-}
-
+/* Filter pills row */
 .filter-pills {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.filter-pills::-webkit-scrollbar,
-.lightbox-version-bar::-webkit-scrollbar {
+.filter-pills::-webkit-scrollbar {
   display: none;
 }
 
-.filter-pill {
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-text-secondary);
-  font-size: 0.74rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  appearance: none;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.filter-pill:hover {
-  border-color: var(--color-border-strong);
-  color: var(--color-text-primary);
-}
-
-.filter-pill.active {
-  border-color: rgba(2, 132, 199, 0.2);
-  background: rgba(2, 132, 199, 0.1);
-  color: var(--color-accent-hover);
-}
-
-.view-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.view-toggle-btn {
-  width: 30px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 7px;
-  border: 0;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.view-toggle-btn:hover {
-  background: var(--color-bg-muted);
-  color: var(--color-text-primary);
-}
-
-.view-toggle-btn.active {
-  background: rgba(2, 132, 199, 0.12);
-  color: var(--color-accent-hover);
-}
-
+/* Custom elements that still need manual focus rings */
 .sidebar-item:focus-visible,
-.filter-pill:focus-visible,
-.view-toggle-btn:focus-visible,
-.mobile-menu-btn:focus-visible,
-.mobile-close-btn:focus-visible,
-.desktop-sidebar-btn:focus-visible,
 .chapter-card:focus-visible,
 .image-card:focus-visible,
 .overview-image-button:focus-visible,
 .lightbox-close:focus-visible,
-.lightbox-nav:focus-visible,
-.lightbox-version-tab:focus-visible,
-.lightbox-status-select:focus-visible,
-.lightbox-notes-area:focus-visible,
-.search-bar:focus-within {
+.lightbox-nav:focus-visible {
   outline: none;
   border-color: rgba(2, 132, 199, 0.32);
   box-shadow:
@@ -1099,60 +959,7 @@ body {
   color: var(--color-accent-hover);
 }
 
-.status-badge {
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  flex-shrink: 0;
-}
-
-.status-badge .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-}
-
-.status-badge.approved {
-  background: rgba(22, 163, 74, 0.12);
-  color: var(--color-approved);
-}
-
-.status-badge.approved .dot {
-  background: var(--color-approved);
-}
-
-.status-badge.review {
-  background: rgba(217, 119, 6, 0.12);
-  color: var(--color-review);
-}
-
-.status-badge.review .dot {
-  background: var(--color-review);
-}
-
-.status-badge.needs-replacement {
-  background: rgba(220, 38, 38, 0.12);
-  color: var(--color-needs-replacement);
-}
-
-.status-badge.needs-replacement .dot {
-  background: var(--color-needs-replacement);
-}
-
-.status-badge.unset {
-  background: rgba(148, 163, 184, 0.14);
-  color: #64748b;
-}
-
-.status-badge.unset .dot {
-  background: #64748b;
-}
+/* Status badge — Radix Badge component (no custom CSS needed) */
 
 .image-grid.list-mode .image-card {
   display: grid;

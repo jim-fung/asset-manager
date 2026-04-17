@@ -1,5 +1,8 @@
-import type { ImageAsset, ImageStatus } from "@/data/imageData";
+import { Badge } from "@radix-ui/themes";
+import type { ImageAsset } from "@/data/imageData";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { resolveStatus, getImageAltText } from "@/utils/imageHelpers";
+import { statusConfig } from "@/utils/statusConfig";
 
 interface ImageCardProps {
   image: ImageAsset;
@@ -7,18 +10,11 @@ interface ImageCardProps {
   triggerId?: string;
 }
 
-const statusLabels: Record<ImageStatus, string> = {
-  approved: "Goedgekeurd",
-  review: "Te beoordelen",
-  "needs-replacement": "Vervangen",
-  unset: "Niet ingesteld",
-};
-
 export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
   const statusMap = useImageStatuses();
-  const status: ImageStatus = statusMap[image.id] ?? "unset";
-  const altText =
-    image.alt || image.description || image.caption || image.filename;
+  const status = resolveStatus(image.id, statusMap);
+  const altText = getImageAltText(image);
+  const { label, color } = statusConfig[status];
 
   return (
     <button
@@ -29,14 +25,10 @@ export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
       aria-label={`Openen ${image.filename}`}
     >
       <div className="image-card-thumb">
-        <img
-          src={image.preview}
-          alt={altText}
-          loading="lazy"
-        />
+        <img src={image.preview} alt={altText} loading="lazy" />
         <div
           className={`image-card-status ${status}`}
-          title={statusLabels[status]}
+          title={label}
           aria-hidden="true"
         />
       </div>
@@ -48,10 +40,14 @@ export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
           </div>
         )}
         <div className="image-card-meta-row">
-          <span className={`status-badge ${status}`}>
-            <span className="dot" />
-            {statusLabels[status]}
-          </span>
+          <Badge
+            color={color}
+            variant="soft"
+            radius="full"
+            size="1"
+          >
+            {label}
+          </Badge>
           <div className="image-card-section">{image.section}</div>
         </div>
       </div>
