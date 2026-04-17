@@ -2,7 +2,7 @@ import { useAtomValue } from "jotai";
 import { imageStatusMapAtom } from "@/store/atoms";
 import type { ImageStatus } from "@/data/imageData";
 
-/** Returns memoized map of image id  effective status */
-export function useImageStatuses(): Record<string, ImageStatus> {
-  return useAtomValue(imageStatusMapAtom) as Record<string, ImageStatus>;
+/** Returns the full status map — consumers use resolveStatus() for per-image lookups */
+export function useImageStatuses(): Readonly<Record<string, ImageStatus>> {
+  return useAtomValue(imageStatusMapAtom) as Readonly<Record<string, ImageStatus>>;
 }

@@ -1,4 +1,5 @@
 import type { ImageStatus } from "@/data/imageData";
+import { validStatuses } from "@/utils/statusConfig";
 
 export type RouteSurface = "overview" | "book" | "digi";
 export type RouteViewMode = "grid" | "list";
@@ -9,13 +10,6 @@ export interface RouteSearchState {
   view: RouteViewMode;
   imageId: string | null;
 }
-
-const validStatuses = new Set<ImageStatus>([
-  "approved",
-  "review",
-  "needs-replacement",
-  "unset",
-]);
 
 const validViews = new Set<RouteViewMode>(["grid", "list"]);
 
