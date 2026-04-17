@@ -1,47 +1,22 @@
-import { useDeferredValue, useEffect, useMemo } from "react";
+import { useDeferredValue, useMemo } from "react";
 import { useSetAtom } from "jotai";
+import { Button, SegmentedControl, TextField } from "@radix-ui/themes";
 import { getChapter, getChapterImages } from "@/data/imageData";
-import type { ImageStatus } from "@/data/imageData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
+import { useSyncedImageId } from "@/hooks/useSyncedImageId";
+import { useImageStatuses } from "@/hooks/useImageStatuses";
+import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageLightbox } from "@/components/ImageLightbox";
-import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
 import { lightboxTriggerIdAtom } from "@/store/atoms";
-
-const searchIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.3-4.3" />
-  </svg>
-);
-
-const gridIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="7" height="7" x="3" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="14" rx="1" />
-    <rect width="7" height="7" x="3" y="14" rx="1" />
-  </svg>
-);
-
-const listIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-  </svg>
-);
+import { statusFilterOptions } from "@/utils/statusConfig";
+import { allOf, matchesQuery, matchesStatus } from "@/utils/predicates";
 
 interface ChapterViewProps {
   chapterId: string;
 }
-
-const statusFilters: Array<{ value: ImageStatus | null; label: string }> = [
-  { value: null, label: "Alles" },
-  { value: "approved", label: "Goedgekeurd" },
-  { value: "review", label: "Te beoordelen" },
-  { value: "needs-replacement", label: "Vervangen" },
-  { value: "unset", label: "Niet ingesteld" },
-];
 
 export function ChapterView({ chapterId }: ChapterViewProps) {
   const chapter = getChapter(chapterId);
@@ -51,37 +26,17 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
   const statusMap = useImageStatuses();
   const deferredSearchQuery = useDeferredValue(q);
 
-  const filteredImages = useMemo(() => {
-    const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
-
-    return allChapterImages.filter((img) => {
-      if (
-        trimmedQuery &&
-        !img.filename.toLowerCase().includes(trimmedQuery) &&
-        !img.caption.toLowerCase().includes(trimmedQuery) &&
-        !img.section.toLowerCase().includes(trimmedQuery)
-      ) {
-        return false;
-      }
-
-      if (!status) {
-        return true;
-      }
-
-      const imageStatus = statusMap[img.id] ?? "unset";
-      return imageStatus === status;
-    });
-  }, [allChapterImages, deferredSearchQuery, status, statusMap]);
+  const filteredImages = useMemo(
+    () =>
+      allChapterImages.filter(
+        allOf(matchesQuery(deferredSearchQuery), matchesStatus(status, statusMap)),
+      ),
+    [allChapterImages, deferredSearchQuery, status, statusMap],
+  );
 
   const activeFilterLabel =
-    statusFilters.find((filter) => filter.value === status)?.label ?? "Alles";
-  const selectedImageId = filteredImages.some((img) => img.id === imageId) ? imageId : null;
-
-  useEffect(() => {
-    if (imageId && !selectedImageId) {
-      setRouteState({ imageId: null }, { replace: true });
-    }
-  }, [imageId, selectedImageId, setRouteState]);
+    statusFilterOptions.find((filter) => filter.value === status)?.label ?? "Alles";
+  const selectedImageId = useSyncedImageId(filteredImages, imageId, setRouteState);
 
   function openImage(nextImageId: string, triggerId: string) {
     setLightboxTriggerId(triggerId);
@@ -94,57 +49,52 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
 
   return (
     <>
-      <Header 
+      <Header
         title={`${chapter.number !== null ? `Hoofdstuk ${chapter.number}: ` : ""}${chapter.title}`}
         subtitle={chapter.subtitle}
       >
-        <div className="search-bar">
-          {searchIcon}
-          <input
-            id="chapter-search"
-            name="chapter-search"
-            type="text"
-            aria-label="Zoek hoofdstukbeelden"
-            placeholder="Zoeken"
-            value={q}
-            onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
-          />
-        </div>
+        <TextField.Root
+          id="chapter-search"
+          name="chapter-search"
+          className="header-search-field"
+          placeholder="Zoeken"
+          value={q}
+          aria-label="Zoek hoofdstukbeelden"
+          onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
+        >
+          <TextField.Slot><SearchIcon /></TextField.Slot>
+        </TextField.Root>
 
         <div className="filter-pills">
-          {statusFilters.map((f) => (
-            <button
-              key={f.label}
-              type="button"
-              className={`filter-pill ${status === f.value ? "active" : ""}`}
-              onClick={() => setRouteState({ status: status === f.value ? null : f.value })}
+          {statusFilterOptions.map((f) => (
+            <Button
+              key={f.value ?? "all"}
+              size="1"
+              variant={status === f.value ? "soft" : "outline"}
+              color={status === f.value ? "sky" : "gray"}
+              onClick={() =>
+                setRouteState({ status: status === f.value ? null : f.value })
+              }
               aria-pressed={status === f.value}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
 
-        <div className="view-toggle">
-          <button
-            type="button"
-            className={`view-toggle-btn ${view === "grid" ? "active" : ""}`}
-            onClick={() => setRouteState({ view: "grid" })}
-            title="Rasterweergave"
-            aria-pressed={view === "grid"}
-          >
-            {gridIcon}
-          </button>
-          <button
-            type="button"
-            className={`view-toggle-btn ${view === "list" ? "active" : ""}`}
-            onClick={() => setRouteState({ view: "list" })}
-            title="Lijstweergave"
-            aria-pressed={view === "list"}
-          >
-            {listIcon}
-          </button>
-        </div>
+        <SegmentedControl.Root
+          size="1"
+          value={view}
+          onValueChange={(v) => v && setRouteState({ view: v as RouteViewMode })}
+          aria-label="Weergave wisselen"
+        >
+          <SegmentedControl.Item value="grid" aria-label="Rasterweergave">
+            <GridIcon />
+          </SegmentedControl.Item>
+          <SegmentedControl.Item value="list" aria-label="Lijstweergave">
+            <ListIcon />
+          </SegmentedControl.Item>
+        </SegmentedControl.Root>
       </Header>
 
       {/* Content */}

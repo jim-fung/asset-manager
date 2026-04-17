@@ -1,5 +1,6 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useSetAtom } from "jotai";
+import { SegmentedControl, TextField } from "@radix-ui/themes";
 import {
   digiCollections,
   digiFiles,
@@ -9,33 +10,12 @@ import {
   type DigiFile,
 } from "@/data/digiFilesData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
+import { useSyncedImageId } from "@/hooks/useSyncedImageId";
+import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
 import { lightboxTriggerIdAtom } from "@/store/atoms";
-
-// - SVG Icons -
-
-const searchIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.3-4.3" />
-  </svg>
-);
-
-const gridIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="7" height="7" x="3" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="3" rx="1" />
-    <rect width="7" height="7" x="14" y="14" rx="1" />
-    <rect width="7" height="7" x="3" y="14" rx="1" />
-  </svg>
-);
-
-const listIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-  </svg>
-);
 
 // - DigiFilesView -
 
@@ -58,11 +38,7 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
   // Filter by search
   const filteredFiles = useMemo(() => {
     const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
-
-    if (!trimmedQuery) {
-      return sourceFiles;
-    }
-
+    if (!trimmedQuery) return sourceFiles;
     return sourceFiles.filter((file) =>
       file.filename.toLowerCase().includes(trimmedQuery),
     );
@@ -76,21 +52,18 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
       })),
     [filteredFiles],
   );
-  const selectedImageId = filteredEntries.some((entry) => entry.asset.id === imageId)
-    ? imageId
-    : null;
+
+  const selectedImageId = useSyncedImageId(
+    filteredEntries.map((e) => e.asset),
+    imageId,
+    setRouteState,
+  );
 
   const title = collection ? collection.label : "Digitale bestanden";
   const subtitle = collection
     ? collection.description
     : `${digiFiles.length} bestanden in ${digiCollections.length} collecties`;
   const scopeLabel = collection ? "Collectiewerkruimte" : "Digitaal archief";
-
-  useEffect(() => {
-    if (imageId && !selectedImageId) {
-      setRouteState({ imageId: null }, { replace: true });
-    }
-  }, [imageId, selectedImageId, setRouteState]);
 
   function openImage(nextImageId: string, triggerId: string) {
     setLightboxTriggerId(triggerId);
@@ -100,39 +73,31 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
   return (
     <>
       <Header title={title} subtitle={subtitle}>
-        <div className="search-bar">
-          {searchIcon}
-          <input
-            id="digi-files-search"
-            name="digi-files-search"
-            type="text"
-            aria-label="Zoek digitale bestanden"
-            placeholder="Zoeken"
-            value={q}
-            onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
-          />
-        </div>
+        <TextField.Root
+          id="digi-files-search"
+          name="digi-files-search"
+          className="header-search-field"
+          placeholder="Zoeken"
+          value={q}
+          aria-label="Zoek digitale bestanden"
+          onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
+        >
+          <TextField.Slot><SearchIcon /></TextField.Slot>
+        </TextField.Root>
 
-        <div className="view-toggle">
-          <button
-            type="button"
-            className={`view-toggle-btn ${view === "grid" ? "active" : ""}`}
-            onClick={() => setRouteState({ view: "grid" })}
-            title="Rasterweergave"
-            aria-pressed={view === "grid"}
-          >
-            {gridIcon}
-          </button>
-          <button
-            type="button"
-            className={`view-toggle-btn ${view === "list" ? "active" : ""}`}
-            onClick={() => setRouteState({ view: "list" })}
-            title="Lijstweergave"
-            aria-pressed={view === "list"}
-          >
-            {listIcon}
-          </button>
-        </div>
+        <SegmentedControl.Root
+          size="1"
+          value={view}
+          onValueChange={(v) => v && setRouteState({ view: v as RouteViewMode })}
+          aria-label="Weergave wisselen"
+        >
+          <SegmentedControl.Item value="grid" aria-label="Rasterweergave">
+            <GridIcon />
+          </SegmentedControl.Item>
+          <SegmentedControl.Item value="list" aria-label="Lijstweergave">
+            <ListIcon />
+          </SegmentedControl.Item>
+        </SegmentedControl.Root>
       </Header>
 
       {/* Content */}
@@ -225,9 +190,7 @@ function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
     >
       <div className="image-card-thumb">
         {imgError ? (
-          <div className="image-card-placeholder">
-            Geen preview
-          </div>
+          <div className="image-card-placeholder">Geen preview</div>
         ) : (
           <img
             src={file.preview}
@@ -237,9 +200,7 @@ function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
           />
         )}
         {file.originalFormat === "tiff" && (
-          <span className="image-card-status-badge">
-            TIFF-JPG
-          </span>
+          <span className="image-card-status-badge">TIFF-JPG</span>
         )}
       </div>
       <div className="image-card-info">

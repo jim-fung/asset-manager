@@ -1028,15 +1028,11 @@ body {
   color: var(--color-text-secondary);
 }
 
-.lightbox-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  background: rgba(7, 10, 16, 0.86);
+/* Radix Dialog overlay — dark backdrop + blur */
+:where(.rt-DialogOverlay) {
+  --color-overlay: rgba(7, 10, 16, 0.86);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  overflow: hidden;
 }
 
 .lightbox-content {
@@ -1059,71 +1055,11 @@ body {
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
 }
 
+/* Version selector — Radix SegmentedControl, placed in image area */
 .lightbox-version-bar {
-  max-width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.76);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-}
-
-.lightbox-version-tab {
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: rgba(226, 232, 240, 0.7);
-  font-size: 0.76rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.lightbox-version-tab:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
-}
-
-.lightbox-version-tab.active {
-  background: rgba(2, 132, 199, 0.18);
-  border-color: rgba(56, 189, 248, 0.22);
-  color: #e0f2fe;
-}
-
-.lightbox-version-tab.disabled {
-  opacity: 0.34;
-  cursor: not-allowed;
-}
-
-.lightbox-version-tab-icon {
-  line-height: 1;
-}
-
-.lightbox-version-tab-badge {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.8);
-}
-
-.lightbox-version-hint {
-  padding: 0 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: rgba(226, 232, 240, 0.46);
-  white-space: nowrap;
+  /* Let Radix SegmentedControl control its own internal styling;
+     we only need to position/size it within the lightbox-content flex column */
+  max-width: 90%;
 }
 
 .lightbox-close,
@@ -1142,6 +1078,7 @@ body {
     border-color var(--transition-fast),
     color var(--transition-fast);
 }
+
 
 .lightbox-close:hover,
 .lightbox-nav:hover {
@@ -1217,35 +1154,15 @@ body {
   color: rgba(226, 232, 240, 0.92);
 }
 
-.lightbox-status-select,
-.lightbox-notes-area {
+/* Status select — Radix Select.Trigger in dark panel */
+.lightbox-status-trigger {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.72);
-  color: #e2e8f0;
-  font-size: 0.82rem;
-  font-weight: 600;
+  margin-top: 8px;
 }
 
-.lightbox-status-select {
-  height: 40px;
-  margin-top: 10px;
-  padding: 0 12px;
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-}
-
+/* Notes area — Radix TextArea; style is set via mt prop, min-height via className */
 .lightbox-notes-area {
-  margin-top: 10px;
-  padding: 10px 12px;
   min-height: 92px;
-  resize: vertical;
-}
-
-.lightbox-notes-area::placeholder {
-  color: rgba(226, 232, 240, 0.42);
 }
 
 .lightbox-versions-panel {
@@ -1392,16 +1309,7 @@ body {
     white-space: normal;
   }
 
-  .search-bar {
-    min-width: 0;
-    max-width: none;
-  }
-
-  .filter-pills {
-    width: 100%;
-  }
-
-  .page-content {
+.page-content {
     padding: 16px;
     gap: 16px;
   }
@@ -1454,11 +1362,6 @@ body {
 
   .lightbox-main-image {
     max-height: 48vh;
-  }
-
-  .lightbox-version-bar {
-    width: 100%;
-    overflow-x: auto;
   }
 
   .lightbox-panel {

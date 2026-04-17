@@ -1,37 +1,24 @@
-import { useEffect } from "react";
 import { useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useNavigate } from "react-router";
 import { chapters, getChapterImages, images } from "@/data/imageData";
-import type { ImageStatus } from "@/data/imageData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
-import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { ImageIcon } from "@/components/Icons";
 import { lightboxTriggerIdAtom } from "@/store/atoms";
-
-const imageIcon = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-    <circle cx="9" cy="9" r="2" />
-    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-  </svg>
-);
+import { statusCountsAtom } from "@/store/derivedAtoms";
+import { getImageAltText, resolveStatus } from "@/utils/imageHelpers";
+import { useImageStatuses } from "@/hooks/useImageStatuses";
 
 export function OverviewDashboard() {
   const navigate = useNavigate();
   const { imageId, setRouteState } = useSurfaceSearchState("overview");
   const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
   const statusMap = useImageStatuses();
-  const selectedImageId = images.some((img) => img.id === imageId) ? imageId : null;
-
-  const statusCounts = images.reduce(
-    (acc, img) => {
-      const s: ImageStatus = (statusMap[img.id] as ImageStatus) ?? "unset";
-      acc[s] = (acc[s] || 0) + 1;
-      return acc;
-    },
-    {} as Record<ImageStatus, number>,
-  );
+  const statusCounts = useAtomValue(statusCountsAtom);
+  const selectedImageId = useSyncedImageId(images, imageId, setRouteState);
 
   const stats = [
     { label: "Totaal beelden", value: images.length, tone: "accent" },
@@ -43,12 +30,6 @@ export function OverviewDashboard() {
       tone: "replace",
     },
   ];
-
-  useEffect(() => {
-    if (imageId && !selectedImageId) {
-      setRouteState({ imageId: null }, { replace: true });
-    }
-  }, [imageId, selectedImageId, setRouteState]);
 
   function openImage(imageId: string, triggerId: string) {
     setLightboxTriggerId(triggerId);
@@ -120,7 +101,7 @@ export function OverviewDashboard() {
                     <img
                       key={img.id + i}
                       src={img.preview}
-                      alt={img.alt || img.description || img.caption || img.filename}
+                      alt={getImageAltText(img)}
                       loading="lazy"
                     />
                   ))}
@@ -139,7 +120,7 @@ export function OverviewDashboard() {
                   <div className="chapter-card-title">{ch.title}</div>
                   <div className="chapter-card-desc">{ch.subtitle}</div>
                   <div className="chapter-card-meta">
-                    {imageIcon}
+                    <ImageIcon />
                     <span>{ch.imageCount} beelden</span>
                   </div>
                 </div>
@@ -162,7 +143,7 @@ export function OverviewDashboard() {
 
           <div className="overview-images-grid">
             {images.map((img) => {
-              const s: ImageStatus = (statusMap[img.id] as ImageStatus) ?? "unset";
+              const s = resolveStatus(img.id, statusMap);
               return (
                 <button
                   key={img.id}
@@ -175,7 +156,7 @@ export function OverviewDashboard() {
                 >
                   <img
                     src={img.preview}
-                    alt={img.alt || img.description || img.caption || img.filename}
+                    alt={getImageAltText(img)}
                     loading="lazy"
                   />
                   <div className={`image-card-status ${s}`} aria-hidden="true" />
