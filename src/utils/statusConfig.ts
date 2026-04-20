@@ -34,9 +34,6 @@ export const statusSelectOptions: readonly {
 ];
 
 /** The set of statuses considered valid in URL search params */
-export const validStatuses = new Set<ImageStatus>([
-  "approved",
-  "review",
-  "needs-replacement",
-  "unset",
-]);
+export const validStatuses = new Set<ImageStatus>(
+  Object.keys(statusConfig) as ImageStatus[],
+);

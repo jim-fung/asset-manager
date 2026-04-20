@@ -14,11 +14,13 @@ export const getImageAltText = (img: ImageAsset): string =>
 export const computeStatusCounts = (
   items: readonly { readonly id: string }[],
   statusMap: Readonly<Record<string, ImageStatus>>,
-): Readonly<Record<ImageStatus, number>> =>
-  items.reduce(
-    (acc, item) => {
-      const s = resolveStatus(item.id, statusMap);
-      return { ...acc, [s]: (acc[s] ?? 0) + 1 };
-    },
-    {} as Record<ImageStatus, number>,
-  );
+): Readonly<Record<ImageStatus, number>> => {
+  const counts: Record<ImageStatus, number> = {
+    approved: 0, review: 0, "needs-replacement": 0, unset: 0
+  };
+  for (const item of items) {
+    const s = resolveStatus(item.id, statusMap);
+    counts[s] = (counts[s] ?? 0) + 1;
+  }
+  return Object.freeze(counts);
+};

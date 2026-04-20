@@ -79,7 +79,8 @@ export function ImageLightbox({
     (delta: number) => {
       if (!items.length || currentIndex === -1) return;
       const nextIndex = (currentIndex + delta + items.length) % items.length;
-      onRequestSelectImage(items[nextIndex]);
+      const next = items[nextIndex];
+      if (next) onRequestSelectImage(next);
     },
     [currentIndex, items, onRequestSelectImage],
   );

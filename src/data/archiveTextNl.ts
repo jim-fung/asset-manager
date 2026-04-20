@@ -75,6 +75,8 @@ const exactTranslations: Record<string, string> = {
     "Voorbereid vanuit bronmateriaal met TIFF-oorsprong",
 };
 
+// IMPORTANT: Longer/more-specific patterns MUST precede their substring patterns to
+// prevent double-translation. Pairs are applied in order via reduce.
 const replacementPairs: Array<[RegExp, string]> = [
   [/Stardancers; Defenders of the Amazon; The Guardian/g, "Sterrendansers; Verdedigers van het Amazonegebied; De beschermer"],
   [/The Spirit of the Sunflower/g, "De geest van de zonnebloem"],
