@@ -19,7 +19,7 @@ interface ChapterViewProps {
 }
 
 export function ChapterView({ chapterId }: ChapterViewProps) {
-  const chapter = getChapter(chapterId);
+  const chapter = getChapter(chapterId)!;
   useDocumentTitle(chapter ? `Hoofdstuk ${chapter.number}: ${chapter.title}` : undefined);
   const allChapterImages = getChapterImages(chapterId);
   const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
@@ -38,10 +38,6 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
   const activeFilterLabel =
     statusFilterOptions.find((filter) => filter.value === status)?.label ?? "Alles";
   const selectedImageId = useSyncedImageId(filteredImages, imageId, setRouteState);
-
-  if (!chapter) {
-    return null;
-  }
 
   return (
     <>

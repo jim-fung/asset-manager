@@ -14,8 +14,12 @@ export const statusCountsAtom = atom((get) => {
 });
 
 /**
- * Atom family: creates a focused atom for reading/writing a single image's status.
+ * Factory function that creates a focused atom for reading/writing a single image's status.
  * Encapsulates the spread-update pattern.
+ *
+ * NOTE: This is a plain factory function, NOT a jotai `atomFamily`.
+ * Callers MUST memoize the returned atom (e.g. with `useMemo`) to avoid
+ * creating new atom instances on every render.
  */
 export const imageStatusAtom = (id: string) =>
   atom(
@@ -26,8 +30,12 @@ export const imageStatusAtom = (id: string) =>
   );
 
 /**
- * Atom family: creates a focused atom for reading/writing a single image's notes.
+ * Factory function that creates a focused atom for reading/writing a single image's notes.
  * Encapsulates the spread-update pattern.
+ *
+ * NOTE: This is a plain factory function, NOT a jotai `atomFamily`.
+ * Callers MUST memoize the returned atom (e.g. with `useMemo`) to avoid
+ * creating new atom instances on every render.
  */
 export const imageNotesAtom = (id: string) =>
   atom(
