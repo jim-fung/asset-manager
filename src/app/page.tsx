@@ -1,7 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { OverviewDashboard } from "@/components/OverviewDashboard";
 
 export default function HomePage() {
-  return <OverviewDashboard />;
+  return (
+    <Suspense>
+      <OverviewDashboard />
+    </Suspense>
+  );
 }

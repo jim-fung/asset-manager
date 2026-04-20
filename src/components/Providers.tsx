@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Theme } from "@radix-ui/themes";
 import { Provider as JotaiProvider } from "jotai";
 import { Layout } from "@/components/Layout";
@@ -16,7 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
         radius="small"
         scaling="100%"
       >
-        <Layout sidebar={<Sidebar />}>{children}</Layout>
+        <Layout sidebar={<Suspense><Sidebar /></Suspense>}>{children}</Layout>
       </Theme>
     </JotaiProvider>
   );

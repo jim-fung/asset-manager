@@ -1,7 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { DigiFilesView } from "@/components/DigiFilesView";
 
 export default function DigiFilesPage() {
-  return <DigiFilesView collectionId={null} />;
+  return (
+    <Suspense>
+      <DigiFilesView collectionId={null} />
+    </Suspense>
+  );
 }

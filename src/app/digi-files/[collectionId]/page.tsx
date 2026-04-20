@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useParams, notFound } from "next/navigation";
 import { DigiFilesView } from "@/components/DigiFilesView";
 import { getCollection } from "@/data/digiFilesData";
@@ -12,5 +13,9 @@ export default function CollectionPage() {
     notFound();
   }
 
-  return <DigiFilesView collectionId={collectionId} />;
+  return (
+    <Suspense>
+      <DigiFilesView collectionId={collectionId} />
+    </Suspense>
+  );
 }

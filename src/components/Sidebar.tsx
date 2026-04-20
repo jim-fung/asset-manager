@@ -24,7 +24,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const isSidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
   const statusCounts = useAtomValue(statusCountsAtom);
