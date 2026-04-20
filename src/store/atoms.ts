@@ -12,6 +12,9 @@ export const sidebarCollapsedAtom = atom(false);
 /** Sidebar open state for mobile */
 export const mobileSidebarOpenAtom = atom(false);
 
+/** Trigger element id used to restore focus after the mobile sidebar closes */
+export const mobileSidebarTriggerIdAtom = atom<string | null>(null);
+
 /** Validates that a value is a Record<string, ImageStatus> */
 function isValidStatusMap(value: unknown): value is Record<string, ImageStatus> {
   if (typeof value !== "object" || value === null) return false;

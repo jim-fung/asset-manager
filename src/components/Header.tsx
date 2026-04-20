@@ -1,8 +1,8 @@
 import { useAtom, useSetAtom } from "jotai";
 import { IconButton } from "@radix-ui/themes";
-import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
+import { mobileSidebarOpenAtom, sidebarCollapsedAtom, mobileSidebarTriggerIdAtom } from "@/store/atoms";
 import { MenuIcon, SidebarIcon } from "@/components/Icons";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 interface HeaderProps {
   children?: ReactNode;
@@ -12,7 +12,9 @@ interface HeaderProps {
 
 export function Header({ children, title, subtitle }: HeaderProps) {
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
+  const setMobileSidebarTriggerId = useSetAtom(mobileSidebarTriggerIdAtom);
   const [isSidebarCollapsed, setSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
+  const menuBtnId = useId();
 
   return (
     <header className="page-header">
@@ -23,7 +25,11 @@ export function Header({ children, title, subtitle }: HeaderProps) {
           color="gray"
           size="2"
           className="mobile-menu-btn"
-          onClick={() => setMobileSidebarOpen(true)}
+          id={menuBtnId}
+          onClick={() => {
+            setMobileSidebarTriggerId(menuBtnId);
+            setMobileSidebarOpen(true);
+          }}
           aria-label="Menu openen"
         >
           <MenuIcon />

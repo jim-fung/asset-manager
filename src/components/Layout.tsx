@@ -1,8 +1,9 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { IconButton } from "@radix-ui/themes";
-import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
+import { FocusScope } from "@radix-ui/react-focus-scope";
+import { mobileSidebarOpenAtom, mobileSidebarTriggerIdAtom, sidebarCollapsedAtom } from "@/store/atoms";
 import { CloseIcon } from "@/components/Icons";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 interface LayoutProps {
   sidebar: ReactNode;
@@ -11,7 +12,18 @@ interface LayoutProps {
 
 export function Layout({ sidebar, children }: LayoutProps) {
   const [isMobileOpen, setIsMobileOpen] = useAtom(mobileSidebarOpenAtom);
+  const triggerId = useAtomValue(mobileSidebarTriggerIdAtom);
   const [isSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
+
+  // Restore focus to the trigger button when the mobile sidebar closes
+  useEffect(() => {
+    if (!isMobileOpen && triggerId) {
+      const trigger = document.getElementById(triggerId);
+      if (trigger instanceof HTMLElement) {
+        trigger.focus();
+      }
+    }
+  }, [isMobileOpen, triggerId]);
 
   return (
     <div
@@ -32,20 +44,22 @@ export function Layout({ sidebar, children }: LayoutProps) {
         onClick={() => setIsMobileOpen(false)}
         aria-label="Navigatie sluiten"
       />
-      <aside className="app-sidebar" aria-label="Hoofdnavigatie">
-        <IconButton
-          type="button"
-          variant="soft"
-          color="gray"
-          size="2"
-          className="mobile-close-btn"
-          onClick={() => setIsMobileOpen(false)}
-          aria-label="Menu sluiten"
-        >
-          <CloseIcon />
-        </IconButton>
-        {sidebar}
-      </aside>
+      <FocusScope trapped={isMobileOpen} loop={isMobileOpen}>
+        <aside className="app-sidebar" aria-label="Hoofdnavigatie">
+          <IconButton
+            type="button"
+            variant="soft"
+            color="gray"
+            size="2"
+            className="mobile-close-btn"
+            onClick={() => setIsMobileOpen(false)}
+            aria-label="Menu sluiten"
+          >
+            <CloseIcon />
+          </IconButton>
+          {sidebar}
+        </aside>
+      </FocusScope>
       <main className="app-main" id="main-content">{children}</main>
     </div>
   );
