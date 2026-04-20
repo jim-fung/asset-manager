@@ -1,5 +1,4 @@
-import { useDeferredValue, useMemo, useState } from "react";
-import { useSetAtom } from "jotai";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 import { SegmentedControl, TextField } from "@radix-ui/themes";
 import {
   digiCollections,
@@ -11,11 +10,12 @@ import {
 } from "@/data/digiFilesData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
+import { useLightboxOpener } from "@/hooks/useLightboxOpener";
 import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
-import { lightboxTriggerIdAtom } from "@/store/atoms";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 // - DigiFilesView -
 
@@ -25,10 +25,11 @@ interface DigiFilesViewProps {
 
 export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
   const { imageId, q, setRouteState, view } = useSurfaceSearchState("digi");
-  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
+  const openImage = useLightboxOpener(setRouteState);
   const deferredSearchQuery = useDeferredValue(q);
 
   const collection = collectionId ? getCollection(collectionId) : null;
+  useDocumentTitle(collection ? collection.label : "Digitale bestanden");
 
   // Which files to show
   const sourceFiles = collectionId
@@ -65,11 +66,6 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
     : `${digiFiles.length} bestanden in ${digiCollections.length} collecties`;
   const scopeLabel = collection ? "Collectiewerkruimte" : "Digitaal archief";
 
-  function openImage(nextImageId: string, triggerId: string) {
-    setLightboxTriggerId(triggerId);
-    setRouteState({ imageId: nextImageId });
-  }
-
   return (
     <>
       <Header title={title} subtitle={subtitle}>
@@ -105,9 +101,9 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
         <section className="view-summary">
           <div className="view-summary-copy">
             <div className="content-section-label">{scopeLabel}</div>
-            <h2 className="view-summary-title">
+            <h1 className="view-summary-title">
               {collection ? collection.label : "Verkenner digitale collecties"}
-            </h2>
+            </h1>
             <p className="view-summary-text">{subtitle}</p>
           </div>
           <div className="view-summary-stats">
@@ -175,7 +171,7 @@ interface DigiFileCardProps {
   triggerId: string;
 }
 
-function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
+const DigiFileCard = memo(function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
   const [imgError, setImgError] = useState(false);
   const col = getCollection(file.collectionId);
   const altText = col ? `${file.filename} uit ${col.label}` : file.filename;
@@ -212,4 +208,4 @@ function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
       </div>
     </button>
   );
-}
+});

@@ -2,6 +2,7 @@
 
 export const SearchIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -18,6 +19,7 @@ export const SearchIcon = () => (
 
 export const GridIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -36,6 +38,7 @@ export const GridIcon = () => (
 
 export const ListIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -51,6 +54,7 @@ export const ListIcon = () => (
 
 export const ChapterIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -66,6 +70,7 @@ export const ChapterIcon = () => (
 
 export const HomeIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -82,6 +87,7 @@ export const HomeIcon = () => (
 
 export const FolderIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -97,6 +103,7 @@ export const FolderIcon = () => (
 
 export const AllFilesIcon = () => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"
@@ -113,6 +120,7 @@ export const AllFilesIcon = () => (
 
 export const ImageIcon = () => (
   <svg
+    aria-hidden="true"
     width="14"
     height="14"
     viewBox="0 0 24 24"
@@ -130,6 +138,7 @@ export const ImageIcon = () => (
 
 export const CloseIcon = () => (
   <svg
+    aria-hidden="true"
     width="24"
     height="24"
     viewBox="0 0 24 24"
@@ -146,6 +155,7 @@ export const CloseIcon = () => (
 
 export const ChevronLeftIcon = () => (
   <svg
+    aria-hidden="true"
     width="24"
     height="24"
     viewBox="0 0 24 24"
@@ -161,6 +171,7 @@ export const ChevronLeftIcon = () => (
 
 export const ChevronRightIcon = () => (
   <svg
+    aria-hidden="true"
     width="24"
     height="24"
     viewBox="0 0 24 24"
@@ -176,6 +187,7 @@ export const ChevronRightIcon = () => (
 
 export const MenuIcon = () => (
   <svg
+    aria-hidden="true"
     width="18"
     height="18"
     viewBox="0 0 24 24"
@@ -193,6 +205,7 @@ export const MenuIcon = () => (
 
 export const SidebarIcon = ({ collapsed }: { collapsed: boolean }) => (
   <svg
+    aria-hidden="true"
     width="16"
     height="16"
     viewBox="0 0 24 24"

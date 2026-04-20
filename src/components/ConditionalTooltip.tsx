@@ -13,9 +13,8 @@ export function ConditionalTooltip({
   content,
   children,
 }: ConditionalTooltipProps) {
-  if (!show) return children;
   return (
-    <Tooltip content={content} side="right">
+    <Tooltip content={content} side="right" open={show ? undefined : false}>
       {children}
     </Tooltip>
   );

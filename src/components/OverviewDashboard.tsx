@@ -1,21 +1,23 @@
-import { useSetAtom } from "jotai";
+import { useMemo } from "react";
 import { useAtomValue } from "jotai";
 import { useNavigate } from "react-router";
 import { chapters, getChapterImages, images } from "@/data/imageData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
+import { useLightboxOpener } from "@/hooks/useLightboxOpener";
+import { useImageStatuses } from "@/hooks/useImageStatuses";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { ImageIcon } from "@/components/Icons";
-import { lightboxTriggerIdAtom } from "@/store/atoms";
 import { statusCountsAtom } from "@/store/derivedAtoms";
 import { getImageAltText, resolveStatus } from "@/utils/imageHelpers";
-import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function OverviewDashboard() {
+  useDocumentTitle("Overzicht");
   const navigate = useNavigate();
   const { imageId, setRouteState } = useSurfaceSearchState("overview");
-  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
+  const openImage = useLightboxOpener(setRouteState);
   const statusMap = useImageStatuses();
   const statusCounts = useAtomValue(statusCountsAtom);
   const selectedImageId = useSyncedImageId(images, imageId, setRouteState);
@@ -31,10 +33,10 @@ export function OverviewDashboard() {
     },
   ];
 
-  function openImage(imageId: string, triggerId: string) {
-    setLightboxTriggerId(triggerId);
-    setRouteState({ imageId });
-  }
+  const chapterImagesMap = useMemo(
+    () => new Map(chapters.map((ch) => [ch.id, getChapterImages(ch.id)])),
+    [],
+  );
 
   return (
     <>
@@ -85,7 +87,7 @@ export function OverviewDashboard() {
 
           <div className="chapter-cards-grid">
           {chapters.map((ch) => {
-            const chImages = getChapterImages(ch.id);
+            const chImages = chapterImagesMap.get(ch.id) ?? [];
             const previewImages = chImages.slice(0, 4);
 
             return (

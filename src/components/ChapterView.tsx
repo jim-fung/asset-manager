@@ -1,18 +1,18 @@
 import { useDeferredValue, useMemo } from "react";
-import { useSetAtom } from "jotai";
 import { Button, SegmentedControl, TextField } from "@radix-ui/themes";
 import { getChapter, getChapterImages } from "@/data/imageData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
+import { useLightboxOpener } from "@/hooks/useLightboxOpener";
 import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageCard } from "@/components/ImageCard";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
-import { lightboxTriggerIdAtom } from "@/store/atoms";
 import { statusFilterOptions } from "@/utils/statusConfig";
 import { allOf, matchesQuery, matchesStatus } from "@/utils/predicates";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 interface ChapterViewProps {
   chapterId: string;
@@ -20,9 +20,10 @@ interface ChapterViewProps {
 
 export function ChapterView({ chapterId }: ChapterViewProps) {
   const chapter = getChapter(chapterId);
+  useDocumentTitle(chapter ? `Hoofdstuk ${chapter.number}: ${chapter.title}` : undefined);
   const allChapterImages = getChapterImages(chapterId);
   const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
-  const setLightboxTriggerId = useSetAtom(lightboxTriggerIdAtom);
+  const openImage = useLightboxOpener(setRouteState);
   const statusMap = useImageStatuses();
   const deferredSearchQuery = useDeferredValue(q);
 
@@ -37,11 +38,6 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
   const activeFilterLabel =
     statusFilterOptions.find((filter) => filter.value === status)?.label ?? "Alles";
   const selectedImageId = useSyncedImageId(filteredImages, imageId, setRouteState);
-
-  function openImage(nextImageId: string, triggerId: string) {
-    setLightboxTriggerId(triggerId);
-    setRouteState({ imageId: nextImageId });
-  }
 
   if (!chapter) {
     return null;
@@ -102,7 +98,7 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         <section className="view-summary">
           <div className="view-summary-copy">
             <div className="content-section-label">Hoofdstukwerkruimte</div>
-            <h2 className="view-summary-title">{chapter.title}</h2>
+            <h1 className="view-summary-title">{chapter.title}</h1>
             {chapter.subtitle && (
               <p className="view-summary-text">{chapter.subtitle}</p>
             )}

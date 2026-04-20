@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Badge } from "@radix-ui/themes";
 import type { ImageAsset } from "@/data/imageData";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
@@ -10,7 +11,7 @@ interface ImageCardProps {
   triggerId?: string;
 }
 
-export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
+export const ImageCard = memo(function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
   const statusMap = useImageStatuses();
   const status = resolveStatus(image.id, statusMap);
   const altText = getImageAltText(image);
@@ -53,4 +54,4 @@ export function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
       </div>
     </button>
   );
-}
+});
