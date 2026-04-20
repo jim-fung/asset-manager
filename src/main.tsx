@@ -4,13 +4,16 @@ import { BrowserRouter } from "react-router";
 import { Provider as JotaiProvider } from "jotai";
 import { App } from "@/App";
 import "@/index.css";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <JotaiProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </JotaiProvider>
-  </StrictMode>,
+  <ErrorBoundary>
+    <StrictMode>
+      <JotaiProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </JotaiProvider>
+    </StrictMode>
+  </ErrorBoundary>,
 );
