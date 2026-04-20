@@ -1,3 +1,5 @@
+"use client";
+
 import { Tooltip } from "@radix-ui/themes";
 import type { ReactElement } from "react";
 

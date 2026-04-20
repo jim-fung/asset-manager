@@ -1,3 +1,5 @@
+"use client";
+
 import { useAtomValue } from "jotai";
 import { imageStatusMapAtom } from "@/store/atoms";
 import type { ImageStatus } from "@/data/imageData";

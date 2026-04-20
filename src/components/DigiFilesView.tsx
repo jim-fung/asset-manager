@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useDeferredValue, useMemo, useState } from "react";
 import { SegmentedControl, TextField } from "@radix-ui/themes";
 import {

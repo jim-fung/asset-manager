@@ -1,5 +1,7 @@
+"use client";
+
 import { OverviewDashboard } from "@/components/OverviewDashboard";
 
-export function HomePage() {
+export default function HomePage() {
   return <OverviewDashboard />;
 }

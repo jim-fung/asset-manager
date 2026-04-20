@@ -1,3 +1,5 @@
+"use client";
+
 import { useAtom, useSetAtom } from "jotai";
 import { IconButton } from "@radix-ui/themes";
 import { mobileSidebarOpenAtom, sidebarCollapsedAtom, mobileSidebarTriggerIdAtom } from "@/store/atoms";

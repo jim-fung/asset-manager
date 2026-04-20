@@ -1,6 +1,9 @@
+"use client";
+
 import { useMemo } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Link, useLocation, useSearchParams } from "react-router";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { chapters, images } from "@/data/imageData";
 import { digiCollections, digiFiles } from "@/data/digiFilesData";
 import {
@@ -20,7 +23,7 @@ import {
 } from "@/components/Icons";
 
 export function Sidebar() {
-  const location = useLocation();
+  const pathname = usePathname();
   const [searchParams] = useSearchParams();
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const isSidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
@@ -57,10 +60,10 @@ export function Sidebar() {
           <li className="sidebar-nav-item">
             <ConditionalTooltip show={isSidebarCollapsed} content="Overzicht">
               <Link
-                className={`sidebar-item ${isActive(location.pathname, "/") ? "active" : ""}`}
+                className={`sidebar-item ${isActive(pathname, "/") ? "active" : ""}`}
                 onClick={() => setMobileSidebarOpen(false)}
                 title="Overzicht"
-                to="/"
+                href="/"
               >
                 <HomeIcon />
                 <span className="sidebar-item-label">Overzicht</span>
@@ -75,13 +78,10 @@ export function Sidebar() {
             <li key={ch.id} className="sidebar-nav-item">
               <ConditionalTooltip show={isSidebarCollapsed} content={ch.title}>
                 <Link
-                  className={`sidebar-item ${isActive(location.pathname, `/book/${ch.id}`) ? "active" : ""}`}
+                  className={`sidebar-item ${isActive(pathname, `/book/${ch.id}`) ? "active" : ""}`}
                   onClick={() => setMobileSidebarOpen(false)}
                   title={ch.title}
-                  to={{
-                    pathname: `/book/${ch.id}`,
-                    search: getLinkSearch("book"),
-                  }}
+                  href={`/book/${ch.id}${getLinkSearch("book")}`}
                 >
                   <ChapterIcon />
                   <span className="sidebar-item-label">
@@ -100,13 +100,10 @@ export function Sidebar() {
           <li className="sidebar-nav-item">
             <ConditionalTooltip show={isSidebarCollapsed} content="Alle collecties">
               <Link
-                className={`sidebar-item ${isActive(location.pathname, "/digi-files") ? "active" : ""}`}
+                className={`sidebar-item ${isActive(pathname, "/digi-files") ? "active" : ""}`}
                 onClick={() => setMobileSidebarOpen(false)}
                 title="Alle collecties"
-                to={{
-                  pathname: "/digi-files",
-                  search: getLinkSearch("digi"),
-                }}
+                href={`/digi-files${getLinkSearch("digi")}`}
               >
                 <AllFilesIcon />
                 <span className="sidebar-item-label">Alle collecties</span>
@@ -119,13 +116,10 @@ export function Sidebar() {
             <li key={col.id} className="sidebar-nav-item">
               <ConditionalTooltip show={isSidebarCollapsed} content={col.label}>
                 <Link
-                  className={`sidebar-item ${isActive(location.pathname, `/digi-files/${col.id}`) ? "active" : ""}`}
+                  className={`sidebar-item ${isActive(pathname, `/digi-files/${col.id}`) ? "active" : ""}`}
                   onClick={() => setMobileSidebarOpen(false)}
                   title={col.label}
-                  to={{
-                    pathname: `/digi-files/${col.id}`,
-                    search: getLinkSearch("digi"),
-                  }}
+                  href={`/digi-files/${col.id}${getLinkSearch("digi")}`}
                 >
                   <FolderIcon />
                   <span className="sidebar-item-label">{col.label}</span>
