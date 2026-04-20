@@ -10,7 +10,7 @@ export const allOf =
     preds.every((p) => p(item));
 
 /**
- * Matches images whose filename, caption, or section contain the query.
+ * Matches images whose filename, caption, section, description, or alt contain the query.
  * Returns a pass-through predicate when the query is empty.
  */
 export const matchesQuery =
@@ -22,7 +22,9 @@ export const matchesQuery =
     return (
       img.filename.toLowerCase().includes(q) ||
       img.caption.toLowerCase().includes(q) ||
-      img.section.toLowerCase().includes(q)
+      img.section.toLowerCase().includes(q) ||
+      (img.description?.toLowerCase().includes(q) ?? false) ||
+      (img.alt?.toLowerCase().includes(q) ?? false)
     );
   };
 
