@@ -4,7 +4,7 @@ import type { ImageAsset, ImageStatus } from "@/data/imageData";
 export const resolveStatus = (
   id: string,
   statusMap: Readonly<Record<string, ImageStatus>>,
-): ImageStatus => (statusMap[id] as ImageStatus) ?? "unset";
+): ImageStatus => statusMap[id] ?? "unset";
 
 /** Derive the best alt text for an image, falling back through available text fields */
 export const getImageAltText = (img: ImageAsset): string =>

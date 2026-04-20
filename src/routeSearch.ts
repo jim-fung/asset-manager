@@ -1,5 +1,5 @@
 import type { ImageStatus } from "@/data/imageData";
-import { validStatuses } from "@/utils/statusConfig";
+import { isImageStatus } from "@/utils/typeGuards";
 
 export type RouteSurface = "overview" | "book" | "digi";
 export type RouteViewMode = "grid" | "list";
@@ -20,9 +20,7 @@ export function readLooseRouteSearchState(searchParams: URLSearchParams): RouteS
 
   return {
     q: searchParams.get("q")?.trim() ?? "",
-    status: rawStatus && validStatuses.has(rawStatus as ImageStatus)
-      ? (rawStatus as ImageStatus)
-      : null,
+    status: rawStatus && isImageStatus(rawStatus) ? rawStatus : null,
     view: rawView && validViews.has(rawView as RouteViewMode)
       ? (rawView as RouteViewMode)
       : "grid",

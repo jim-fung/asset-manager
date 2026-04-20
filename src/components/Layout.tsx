@@ -23,6 +23,9 @@ export function Layout({ sidebar, children }: LayoutProps) {
         .filter(Boolean)
         .join(" ")}
     >
+      <a href="#main-content" className="skip-link">
+        Naar hoofdinhoud
+      </a>
       <button
         type="button"
         className="sidebar-overlay"
@@ -43,7 +46,7 @@ export function Layout({ sidebar, children }: LayoutProps) {
         </IconButton>
         {sidebar}
       </aside>
-      <main className="app-main">{children}</main>
+      <main className="app-main" id="main-content">{children}</main>
     </div>
   );
 }

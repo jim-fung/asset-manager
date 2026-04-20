@@ -18,6 +18,7 @@ import { imageNotesAtom, imageStatusAtom } from "@/store/derivedAtoms";
 import type { ImageAsset, ImageVersion } from "@/data/imageData";
 import { getImageAltText } from "@/utils/imageHelpers";
 import { statusSelectOptions } from "@/utils/statusConfig";
+import { isImageStatus, isImageVersion } from "@/utils/typeGuards";
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/Icons";
 
 interface ImageLightboxProps {
@@ -206,9 +207,9 @@ export function ImageLightbox({
                   size="1"
                   className="lightbox-version-bar"
                   value={activeVersion}
-                  onValueChange={(v) =>
-                    v && setActiveVersion(v as ImageVersion)
-                  }
+                  onValueChange={(v) => {
+                    if (v && isImageVersion(v)) setActiveVersion(v);
+                  }}
                 >
                   {versionTabs
                     .filter((tab) => versionAvailable[tab.value])
@@ -308,9 +309,9 @@ export function ImageLightbox({
                 </label>
                 <Select.Root
                   value={currentStatus}
-                  onValueChange={(value) =>
-                    setCurrentStatus(value as typeof currentStatus)
-                  }
+                  onValueChange={(value) => {
+                    if (isImageStatus(value)) setCurrentStatus(value);
+                  }}
                 >
                   <Select.Trigger
                     id="lightbox-status-select"

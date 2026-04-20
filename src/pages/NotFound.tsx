@@ -1,7 +1,9 @@
 import { Link } from "react-router";
 import { Header } from "@/components/Header";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function NotFoundPage() {
+  useDocumentTitle("Pagina niet gevonden");
   return (
     <>
       <Header

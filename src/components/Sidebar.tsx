@@ -53,77 +53,88 @@ export function Sidebar() {
 
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">Bibliotheek</div>
-
-        <ConditionalTooltip show={isSidebarCollapsed} content="Overzicht">
-          <Link
-            className={`sidebar-item ${isActive(location.pathname, "/") ? "active" : ""}`}
-            onClick={() => setMobileSidebarOpen(false)}
-            title="Overzicht"
-            to="/"
-          >
-            <HomeIcon />
-            <span className="sidebar-item-label">Overzicht</span>
-          </Link>
-        </ConditionalTooltip>
+        <ul className="sidebar-nav-list" role="list">
+          <li className="sidebar-nav-item">
+            <ConditionalTooltip show={isSidebarCollapsed} content="Overzicht">
+              <Link
+                className={`sidebar-item ${isActive(location.pathname, "/") ? "active" : ""}`}
+                onClick={() => setMobileSidebarOpen(false)}
+                title="Overzicht"
+                to="/"
+              >
+                <HomeIcon />
+                <span className="sidebar-item-label">Overzicht</span>
+              </Link>
+            </ConditionalTooltip>
+          </li>
+        </ul>
 
         <div className="sidebar-section-label">Hoofdstukken</div>
-
-        {chapters.map((ch) => (
-          <ConditionalTooltip key={ch.id} show={isSidebarCollapsed} content={ch.title}>
-            <Link
-              className={`sidebar-item ${isActive(location.pathname, `/book/${ch.id}`) ? "active" : ""}`}
-              onClick={() => setMobileSidebarOpen(false)}
-              title={ch.title}
-              to={{
-                pathname: `/book/${ch.id}`,
-                search: getLinkSearch("book"),
-              }}
-            >
-              <ChapterIcon />
-              <span className="sidebar-item-label">
-                {ch.number !== null ? `${ch.number}. ` : ""}
-                {ch.title}
-              </span>
-              <span className="sidebar-item-count">{ch.imageCount}</span>
-            </Link>
-          </ConditionalTooltip>
-        ))}
+        <ul className="sidebar-nav-list" role="list">
+          {chapters.map((ch) => (
+            <li key={ch.id} className="sidebar-nav-item">
+              <ConditionalTooltip show={isSidebarCollapsed} content={ch.title}>
+                <Link
+                  className={`sidebar-item ${isActive(location.pathname, `/book/${ch.id}`) ? "active" : ""}`}
+                  onClick={() => setMobileSidebarOpen(false)}
+                  title={ch.title}
+                  to={{
+                    pathname: `/book/${ch.id}`,
+                    search: getLinkSearch("book"),
+                  }}
+                >
+                  <ChapterIcon />
+                  <span className="sidebar-item-label">
+                    {ch.number !== null ? `${ch.number}. ` : ""}
+                    {ch.title}
+                  </span>
+                  <span className="sidebar-item-count">{ch.imageCount}</span>
+                </Link>
+              </ConditionalTooltip>
+            </li>
+          ))}
+        </ul>
 
         <div className="sidebar-section-label">Digitale bestanden</div>
+        <ul className="sidebar-nav-list" role="list">
+          <li className="sidebar-nav-item">
+            <ConditionalTooltip show={isSidebarCollapsed} content="Alle collecties">
+              <Link
+                className={`sidebar-item ${isActive(location.pathname, "/digi-files") ? "active" : ""}`}
+                onClick={() => setMobileSidebarOpen(false)}
+                title="Alle collecties"
+                to={{
+                  pathname: "/digi-files",
+                  search: getLinkSearch("digi"),
+                }}
+              >
+                <AllFilesIcon />
+                <span className="sidebar-item-label">Alle collecties</span>
+                <span className="sidebar-item-count">{digiFiles.length}</span>
+              </Link>
+            </ConditionalTooltip>
+          </li>
 
-        <ConditionalTooltip show={isSidebarCollapsed} content="Alle collecties">
-          <Link
-            className={`sidebar-item ${isActive(location.pathname, "/digi-files") ? "active" : ""}`}
-            onClick={() => setMobileSidebarOpen(false)}
-            title="Alle collecties"
-            to={{
-              pathname: "/digi-files",
-              search: getLinkSearch("digi"),
-            }}
-          >
-            <AllFilesIcon />
-            <span className="sidebar-item-label">Alle collecties</span>
-            <span className="sidebar-item-count">{digiFiles.length}</span>
-          </Link>
-        </ConditionalTooltip>
-
-        {digiCollections.map((col) => (
-          <ConditionalTooltip key={col.id} show={isSidebarCollapsed} content={col.label}>
-            <Link
-              className={`sidebar-item ${isActive(location.pathname, `/digi-files/${col.id}`) ? "active" : ""}`}
-              onClick={() => setMobileSidebarOpen(false)}
-              title={col.label}
-              to={{
-                pathname: `/digi-files/${col.id}`,
-                search: getLinkSearch("digi"),
-              }}
-            >
-              <FolderIcon />
-              <span className="sidebar-item-label">{col.label}</span>
-              <span className="sidebar-item-count">{col.fileCount}</span>
-            </Link>
-          </ConditionalTooltip>
-        ))}
+          {digiCollections.map((col) => (
+            <li key={col.id} className="sidebar-nav-item">
+              <ConditionalTooltip show={isSidebarCollapsed} content={col.label}>
+                <Link
+                  className={`sidebar-item ${isActive(location.pathname, `/digi-files/${col.id}`) ? "active" : ""}`}
+                  onClick={() => setMobileSidebarOpen(false)}
+                  title={col.label}
+                  to={{
+                    pathname: `/digi-files/${col.id}`,
+                    search: getLinkSearch("digi"),
+                  }}
+                >
+                  <FolderIcon />
+                  <span className="sidebar-item-label">{col.label}</span>
+                  <span className="sidebar-item-count">{col.fileCount}</span>
+                </Link>
+              </ConditionalTooltip>
+            </li>
+          ))}
+        </ul>
       </nav>
 
       <div className="sidebar-stats">
@@ -165,3 +176,4 @@ export function Sidebar() {
     </>
   );
 }
+

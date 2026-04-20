@@ -20,7 +20,7 @@ export const statusCountsAtom = atom((get) => {
 export const imageStatusAtom = (id: string) =>
   atom(
     (get): ImageStatus =>
-      (get(imageStatusMapAtom)[id] as ImageStatus) ?? "unset",
+      get(imageStatusMapAtom)[id] ?? "unset",
     (get, set, value: ImageStatus) =>
       set(imageStatusMapAtom, { ...get(imageStatusMapAtom), [id]: value }),
   );
