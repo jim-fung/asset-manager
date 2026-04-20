@@ -1,8 +1,10 @@
-import { Link } from "react-router";
+"use client";
+
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export function NotFoundPage() {
+export default function NotFoundPage() {
   useDocumentTitle("Pagina niet gevonden");
   return (
     <>
@@ -10,7 +12,6 @@ export function NotFoundPage() {
         title="Pagina niet gevonden"
         subtitle="De gevraagde route of collectie bestaat niet in dit archief"
       />
-
       <div className="page-content">
         <section className="content-section">
           <div className="empty-state">
@@ -18,7 +19,7 @@ export function NotFoundPage() {
             <div className="empty-state-text">
               Controleer de URL of ga terug naar het overzicht.
             </div>
-            <Link to="/">Terug naar het overzicht</Link>
+            <Link href="/">Terug naar het overzicht</Link>
           </div>
         </section>
       </div>

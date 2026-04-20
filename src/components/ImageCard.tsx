@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from "react";
 import { Badge } from "@radix-ui/themes";
 import type { ImageAsset } from "@/data/imageData";

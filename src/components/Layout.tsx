@@ -1,3 +1,5 @@
+"use client";
+
 import { useAtom, useAtomValue } from "jotai";
 import { IconButton } from "@radix-ui/themes";
 import { FocusScope } from "@radix-ui/react-focus-scope";

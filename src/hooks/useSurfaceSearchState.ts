@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   createSurfaceSearchParams,
   readLooseRouteSearchState,
@@ -12,7 +14,9 @@ interface SetRouteStateOptions {
 }
 
 export function useSurfaceSearchState(surface: RouteSurface) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const state = useMemo(() => readLooseRouteSearchState(searchParams), [searchParams]);
   const currentSearch = searchParams.toString();
   const canonicalSearchParams = useMemo(
@@ -23,9 +27,10 @@ export function useSurfaceSearchState(surface: RouteSurface) {
 
   useEffect(() => {
     if (currentSearch !== canonicalSearch) {
-      setSearchParams(canonicalSearchParams, { replace: true });
+      const search = canonicalSearchParams.toString();
+      router.replace(`${pathname}${search ? `?${search}` : ""}`);
     }
-  }, [canonicalSearch, canonicalSearchParams, currentSearch, setSearchParams]);
+  }, [canonicalSearch, canonicalSearchParams, currentSearch, pathname, router]);
 
   const setRouteState = useCallback(
     (updates: Partial<RouteSearchState>, options?: SetRouteStateOptions) => {
@@ -33,10 +38,15 @@ export function useSurfaceSearchState(surface: RouteSurface) {
         ...state,
         ...updates,
       });
-
-      setSearchParams(nextSearchParams, { replace: options?.replace });
+      const search = nextSearchParams.toString();
+      const url = `${pathname}${search ? `?${search}` : ""}`;
+      if (options?.replace) {
+        router.replace(url);
+      } else {
+        router.push(url);
+      }
     },
-    [setSearchParams, state, surface],
+    [pathname, router, state, surface],
   );
 
   return {

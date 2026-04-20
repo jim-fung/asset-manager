@@ -1,6 +1,8 @@
+"use client";
+
 import { useMemo } from "react";
 import { useAtomValue } from "jotai";
-import { useNavigate } from "react-router";
+import { useRouter } from "next/navigation";
 import { chapters, getChapterImages, images } from "@/data/imageData";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
@@ -15,7 +17,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function OverviewDashboard() {
   useDocumentTitle("Overzicht");
-  const navigate = useNavigate();
+  const router = useRouter();
   const { imageId, setRouteState } = useSurfaceSearchState("overview");
   const openImage = useLightboxOpener(setRouteState);
   const statusMap = useImageStatuses();
@@ -95,7 +97,7 @@ export function OverviewDashboard() {
                 key={ch.id}
                 type="button"
                 className="chapter-card"
-                onClick={() => navigate(`/book/${ch.id}`)}
+                onClick={() => router.push(`/book/${ch.id}`)}
                 aria-label={`Openen ${ch.title}`}
               >
                 <div className="chapter-card-preview">

@@ -1,3 +1,5 @@
+"use client";
+
 import { useDeferredValue, useMemo } from "react";
 import { Button, SegmentedControl, TextField } from "@radix-ui/themes";
 import { getChapter, getChapterImages } from "@/data/imageData";
