@@ -42,10 +42,31 @@ export const imageStatusMapAtom = atom<Record<string, ImageStatus>, [Record<stri
   },
 );
 
-/** Per-image notes overrides, keyed by image id, persisted to localStorage */
-export const imageNotesMapAtom = atomWithStorage<Record<string, string>>(
+/** Validates that a value is a Record<string, string> */
+function isValidNotesMap(value: unknown): value is Record<string, string> {
+  if (typeof value !== "object" || value === null) return false;
+  for (const v of Object.values(value)) {
+    if (typeof v !== "string") return false;
+  }
+  return true;
+}
+
+/** Raw persisted notes map (may contain corrupted data from localStorage) */
+const rawNotesMapAtom = atomWithStorage<Record<string, string>>(
   "iam-notes-map",
   {},
+);
+
+/** Per-image notes overrides, keyed by image id, persisted to localStorage.
+ *  Validates stored data on read to handle corrupted localStorage entries. */
+export const imageNotesMapAtom = atom<Record<string, string>, [Record<string, string>], void>(
+  (get) => {
+    const raw = get(rawNotesMapAtom);
+    return isValidNotesMap(raw) ? raw : {};
+  },
+  (_get, set, next) => {
+    set(rawNotesMapAtom, next);
+  },
 );
 
 /**
