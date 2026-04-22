@@ -16,11 +16,11 @@ npm install
 npm run dev
 ```
 
-Open the local Vite URL shown in the terminal.
+Open the local Next.js URL shown in the terminal (usually http://localhost:3000).
 
 ## Scripts
 
-- `npm run dev` starts the Vite dev server
+- `npm run dev` starts the Next.js development server
 - `npm run build` type-checks and builds the app
 - `npm run lint` runs ESLint
 
