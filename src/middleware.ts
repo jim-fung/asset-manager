@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
         if (user === 'admin' && pwd === '9498') {
           return NextResponse.next()
         }
-      } catch (e) {
+      } catch {
         // Invalid base64
       }
     }
