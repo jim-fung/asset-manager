@@ -15,6 +15,7 @@ import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
 import { statusCountsAtom } from "@/store/derivedAtoms";
 import { statusConfig } from "@/utils/statusConfig";
 import { ConditionalTooltip } from "@/components/ConditionalTooltip";
+import { UserDisplay } from "@/components/UserDisplay";
 import {
   HomeIcon,
   ChapterIcon,
@@ -130,6 +131,8 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
+
+      <UserDisplay />
 
       <div className="sidebar-stats">
         <div className="sidebar-stat-row">

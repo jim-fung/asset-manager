@@ -1,7 +1,5 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import type { ImageStatus, ImageVersion } from "@/data/imageData";
-import { isImageStatus } from "@/utils/typeGuards";
+import type { ImageVersion } from "@/data/imageData";
 
 /** Trigger element id used to restore focus after the lightbox closes */
 export const lightboxTriggerIdAtom = atom<string | null>(null);
@@ -15,62 +13,8 @@ export const mobileSidebarOpenAtom = atom(false);
 /** Trigger element id used to restore focus after the mobile sidebar closes */
 export const mobileSidebarTriggerIdAtom = atom<string | null>(null);
 
-/** Validates that a value is a Record<string, ImageStatus> */
-function isValidStatusMap(value: unknown): value is Record<string, ImageStatus> {
-  if (typeof value !== "object" || value === null) return false;
-  for (const v of Object.values(value)) {
-    if (!isImageStatus(v as string)) return false;
-  }
-  return true;
-}
-
-/** Raw persisted status map (may contain corrupted data from localStorage) */
-const rawStatusMapAtom = atomWithStorage<Record<string, ImageStatus>>(
-  "iam-status-map",
-  {},
-);
-
-/** Per-image status overrides, keyed by image id, persisted to localStorage.
- *  Validates stored data on read to handle corrupted localStorage entries. */
-export const imageStatusMapAtom = atom<Record<string, ImageStatus>, [Record<string, ImageStatus>], void>(
-  (get) => {
-    const raw = get(rawStatusMapAtom);
-    return isValidStatusMap(raw) ? raw : {};
-  },
-  (_get, set, next) => {
-    set(rawStatusMapAtom, next);
-  },
-);
-
-/** Validates that a value is a Record<string, string> */
-function isValidNotesMap(value: unknown): value is Record<string, string> {
-  if (typeof value !== "object" || value === null) return false;
-  for (const v of Object.values(value)) {
-    if (typeof v !== "string") return false;
-  }
-  return true;
-}
-
-/** Raw persisted notes map (may contain corrupted data from localStorage) */
-const rawNotesMapAtom = atomWithStorage<Record<string, string>>(
-  "iam-notes-map",
-  {},
-);
-
-/** Per-image notes overrides, keyed by image id, persisted to localStorage.
- *  Validates stored data on read to handle corrupted localStorage entries. */
-export const imageNotesMapAtom = atom<Record<string, string>, [Record<string, string>], void>(
-  (get) => {
-    const raw = get(rawNotesMapAtom);
-    return isValidNotesMap(raw) ? raw : {};
-  },
-  (_get, set, next) => {
-    set(rawNotesMapAtom, next);
-  },
-);
-
 /**
- * Active version tab in the lightbox (ephemeral  not persisted).
+ * Active version tab in the lightbox (ephemeral, not persisted).
  * Always resets to "regular" when a new image is opened.
  */
 export const activeVersionAtom = atom<ImageVersion>("regular");
