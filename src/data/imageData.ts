@@ -137,7 +137,8 @@ function img(
     src: preview,
     versions: {
       regular: preview,
-      // Future alternate variants can still be supplied explicitly if needed.
+      // TODO: Supply optimized and print variants when they become available.
+      // For now, the lightbox will fall back to `src` if these are undefined.
     },
     chapter: chapterList.find((c) => c.id === chapterId)?.title ?? chapterId,
     chapterId,
