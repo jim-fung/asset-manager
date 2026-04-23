@@ -29,3 +29,4 @@ dist-ssr
 # Reference only - not for use
 for-reference-only-do-not-use-this-code
 .vercel
+.env*.local

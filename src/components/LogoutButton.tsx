@@ -1,26 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import { Button } from "@radix-ui/themes";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { SignOutIcon } from "@/components/Icons";
 
 export function LogoutButton() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { signOut } = useClerk();
 
   const handleLogout = async () => {
-    setLoading(true);
-    try {
-      await authClient.signOut();
-      router.push("/login");
-      router.refresh();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      setLoading(false);
-    }
+    await signOut();
   };
 
   return (
@@ -28,11 +16,10 @@ export function LogoutButton() {
       variant="ghost"
       color="gray"
       onClick={handleLogout}
-      disabled={loading}
-      style={{ width: "100%", justifyContent: "flex-start" }}
+      className="sidebar-logout-btn"
     >
       <SignOutIcon />
-      {loading ? "Uitloggen..." : "Uitloggen"}
+      Uitloggen
     </Button>
   );
 }

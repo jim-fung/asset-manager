@@ -13,8 +13,6 @@ import {
 } from "@/routeSearch";
 import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
 import { serverAssignmentsAtom } from "@/store/serverAtoms";
-import { statusCountsAtom } from "@/store/derivedAtoms";
-import { statusConfig } from "@/utils/statusConfig";
 import { getChapterImageCountWithAssignments } from "@/utils/viewModelHelpers";
 import { digiFiles } from "@/data/digiFilesData";
 import { ConditionalTooltip } from "@/components/ConditionalTooltip";
@@ -31,7 +29,6 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const isSidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
-  const statusCounts = useAtomValue(statusCountsAtom);
   const assignments = useAtomValue(serverAssignmentsAtom);
   const currentRouteState = useMemo(
     () => readLooseRouteSearchState(searchParams),
@@ -46,6 +43,8 @@ export function Sidebar() {
 
   const isActive = (pathname: string, expectedPath: string) =>
     pathname === expectedPath;
+  const getShortHint = (label: string) =>
+    label.trim().charAt(0).toUpperCase();
 
   return (
     <>
@@ -69,9 +68,11 @@ export function Sidebar() {
                 onClick={() => setMobileSidebarOpen(false)}
                 title="Overzicht"
                 href="/"
+                data-nav-group="library"
               >
                 <HomeIcon />
                 <span className="sidebar-item-label">Overzicht</span>
+                <span className="sidebar-item-hint" aria-hidden="true">O</span>
               </Link>
             </ConditionalTooltip>
           </li>
@@ -87,6 +88,7 @@ export function Sidebar() {
                   onClick={() => setMobileSidebarOpen(false)}
                   title={ch.title}
                   href={`/book/${ch.id}${getLinkSearch("book")}`}
+                  data-nav-group="chapter"
                 >
                   <ChapterIcon />
                   <span className="sidebar-item-label">
@@ -94,6 +96,9 @@ export function Sidebar() {
                     {ch.title}
                   </span>
                   <span className="sidebar-item-count">{getChapterImageCountWithAssignments(ch.id, assignments, images)}</span>
+                  <span className="sidebar-item-hint" aria-hidden="true">
+                    {ch.number !== null ? String(ch.number) : getShortHint(ch.title)}
+                  </span>
                 </Link>
               </ConditionalTooltip>
             </li>
@@ -109,10 +114,12 @@ export function Sidebar() {
                 onClick={() => setMobileSidebarOpen(false)}
                 title="Alle collecties"
                 href={`/digi-files${getLinkSearch("digi")}`}
+                data-nav-group="digi"
               >
                 <AllFilesIcon />
                 <span className="sidebar-item-label">Alle collecties</span>
                 <span className="sidebar-item-count">{digiFiles.length}</span>
+                <span className="sidebar-item-hint" aria-hidden="true">A</span>
               </Link>
             </ConditionalTooltip>
           </li>
@@ -125,10 +132,12 @@ export function Sidebar() {
                   onClick={() => setMobileSidebarOpen(false)}
                   title={col.label}
                   href={`/digi-files/${col.id}${getLinkSearch("digi")}`}
+                  data-nav-group="digi"
                 >
                   <FolderIcon />
                   <span className="sidebar-item-label">{col.label}</span>
                   <span className="sidebar-item-count">{col.fileCount}</span>
+                  <span className="sidebar-item-hint" aria-hidden="true">{getShortHint(col.label)}</span>
                 </Link>
               </ConditionalTooltip>
             </li>
@@ -137,44 +146,6 @@ export function Sidebar() {
       </nav>
 
       <UserDisplay />
-
-      <div className="sidebar-stats">
-        <div className="sidebar-stat-row">
-          <span className="sidebar-stat-label">Totaal beelden</span>
-          <span className="sidebar-stat-value">{images.length}</span>
-        </div>
-        <div className="sidebar-stat-row">
-          <span className="sidebar-stat-label" style={{ color: "var(--color-approved)" }}>
-            {statusConfig.approved.label}
-          </span>
-          <span className="sidebar-stat-value" style={{ color: "var(--color-approved)" }}>
-            {statusCounts.approved || 0}
-          </span>
-        </div>
-        <div className="sidebar-stat-row">
-          <span className="sidebar-stat-label" style={{ color: "var(--color-review)" }}>
-            {statusConfig.review.label}
-          </span>
-          <span className="sidebar-stat-value" style={{ color: "var(--color-review)" }}>
-            {statusCounts.review || 0}
-          </span>
-        </div>
-        <div className="sidebar-stat-row">
-          <span
-            className="sidebar-stat-label"
-            style={{ color: "var(--color-needs-replacement)" }}
-          >
-            {statusConfig["needs-replacement"].label}
-          </span>
-          <span
-            className="sidebar-stat-value"
-            style={{ color: "var(--color-needs-replacement)" }}
-          >
-            {statusCounts["needs-replacement"] || 0}
-          </span>
-        </div>
-      </div>
     </>
   );
 }
-

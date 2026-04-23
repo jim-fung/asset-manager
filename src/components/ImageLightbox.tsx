@@ -183,6 +183,7 @@ export function ImageLightbox({
       }}
     >
       <Dialog.Content
+        className="lightbox-shell"
         width="100vw"
         height="100dvh"
         maxWidth="100vw"
@@ -209,82 +210,92 @@ export function ImageLightbox({
         }}
       >
         {selectedImage && (
-          <>
+          <div className="lightbox-root">
             <div className="lightbox-content">
-              <Dialog.Close>
-                <button
-                  type="button"
-                  className="lightbox-close"
-                  aria-label="Sluiten (Esc)"
-                  title="Sluiten (Esc)"
-                >
-                  <CloseIcon />
-                </button>
-              </Dialog.Close>
+              <div className="lightbox-toolbar">
+                <Dialog.Title className="lightbox-panel-title">
+                  {selectedImage.filename}
+                </Dialog.Title>
+                <div className="lightbox-toolbar-actions">
+                  {hasAnyAltVersion && (
+                    <SegmentedControl.Root
+                      size="1"
+                      className="lightbox-version-bar"
+                      value={activeVersion}
+                      onValueChange={(v) => {
+                        if (v && isImageVersion(v)) setActiveVersion(v);
+                      }}
+                    >
+                      {versionTabs
+                        .filter((tab) => versionAvailable[tab.value])
+                        .map((tab) => (
+                          <SegmentedControl.Item
+                            key={tab.value}
+                            value={tab.value}
+                          >
+                            {tab.label}
+                          </SegmentedControl.Item>
+                        ))}
+                    </SegmentedControl.Root>
+                  )}
+                  <Dialog.Close>
+                    <button
+                      type="button"
+                      className="lightbox-close"
+                      aria-label="Sluiten (Esc)"
+                      title="Sluiten (Esc)"
+                    >
+                      <CloseIcon />
+                    </button>
+                  </Dialog.Close>
+                </div>
+              </div>
 
-              {items.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    className="lightbox-nav prev"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      goTo(-1);
-                    }}
-                    aria-label="Vorige"
-                    title="Vorige"
-                  >
-                    <ChevronLeftIcon />
-                  </button>
-                  <button
-                    type="button"
-                    className="lightbox-nav next"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      goTo(1);
-                    }}
-                    aria-label="Volgende"
-                    title="Volgende"
-                  >
-                    <ChevronRightIcon />
-                  </button>
-                </>
-              )}
-
-              {hasAnyAltVersion && (
-                <SegmentedControl.Root
-                  size="1"
-                  className="lightbox-version-bar"
-                  value={activeVersion}
-                  onValueChange={(v) => {
-                    if (v && isImageVersion(v)) setActiveVersion(v);
-                  }}
-                >
-                  {versionTabs
-                    .filter((tab) => versionAvailable[tab.value])
-                    .map((tab) => (
-                      <SegmentedControl.Item
-                        key={tab.value}
-                        value={tab.value}
-                      >
-                        {tab.label}
-                      </SegmentedControl.Item>
-                    ))}
-                </SegmentedControl.Root>
-              )}
-
-              <img
-                key={`${selectedImage.id}-${activeVersion}`}
-                src={versionSrc}
-                alt={altText}
-                className="lightbox-main-image"
-              />
+              <div className="lightbox-image-stage">
+                {items.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className="lightbox-nav prev"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goTo(-1);
+                      }}
+                      aria-label="Vorige"
+                      title="Vorige"
+                    >
+                      <ChevronLeftIcon />
+                    </button>
+                    <button
+                      type="button"
+                      className="lightbox-nav next"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goTo(1);
+                      }}
+                      aria-label="Volgende"
+                      title="Volgende"
+                    >
+                      <ChevronRightIcon />
+                    </button>
+                  </>
+                )}
+                <img
+                  key={`${selectedImage.id}-${activeVersion}`}
+                  src={versionSrc}
+                  alt={altText}
+                  className="lightbox-main-image"
+                  data-image-id={selectedImage.id}
+                  data-source-type={selectedImage.sourceType}
+                />
+              </div>
             </div>
 
             <div className="lightbox-panel">
-              <Dialog.Title className="lightbox-panel-title">
-                {selectedImage.filename}
-              </Dialog.Title>
+              <div className="lightbox-meta-row">
+                <span className="lightbox-meta-label">Bestand</span>
+                <span className="lightbox-meta-value">{selectedImage.filename}</span>
+              </div>
 
               {isDigi && selectedImage.sourceCollectionLabel && (
                 <div className="lightbox-meta-row">
@@ -370,29 +381,6 @@ export function ImageLightbox({
                 </span>
               </div>
 
-              {hasAnyAltVersion && (
-                <div className="lightbox-meta-row">
-                  <span className="lightbox-meta-label">Versies</span>
-                  <div className="lightbox-versions-panel">
-                    {versionTabs.map((tab) => (
-                      <div
-                        key={tab.value}
-                        className={[
-                          "lightbox-versions-panel-item",
-                          versionAvailable[tab.value] ? "available" : "missing",
-                        ].join(" ")}
-                      >
-                        <span
-                          className="lightbox-versions-panel-dot"
-                          aria-hidden="true"
-                        />
-                        {tab.label}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div className="lightbox-meta-row lightbox-form-row">
                 <label
                   className="lightbox-meta-label"
@@ -437,7 +425,7 @@ export function ImageLightbox({
                 />
               </div>
             </div>
-          </>
+          </div>
         )}
       </Dialog.Content>
     </Dialog.Root>
