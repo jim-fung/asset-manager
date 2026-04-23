@@ -26,3 +26,10 @@ export async function requireUserId() {
   const session = await requireAuth();
   return session.user.id;
 }
+
+/** Returns the authenticated user's ID, or null if not authenticated.
+ *  Use this in API routes where redirect() is not appropriate. */
+export async function getUserId(): Promise<string | null> {
+  const session = await getSession();
+  return session?.user?.id ?? null;
+}

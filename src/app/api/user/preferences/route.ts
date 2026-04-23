@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { userUiPreferences } from "@/db/schema";
-import { requireUserId } from "@/lib/auth-server";
+import { getUserId } from "@/lib/auth-server";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const userId = await requireUserId();
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const preferences = await db
       .select()
       .from(userUiPreferences)
@@ -18,9 +21,6 @@ export async function GET() {
     }
     return NextResponse.json(prefMap);
   } catch (error) {
-    if (error instanceof Error && error.message === "No session found") {
-      return NextResponse.json({}, { status: 401 });
-    }
     console.error("Error fetching preferences:", error);
     return NextResponse.json({}, { status: 500 });
   }
