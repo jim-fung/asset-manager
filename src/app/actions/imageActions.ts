@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { userImageStatuses, userImageNotes } from "@/db/schema";
 import { requireUserId } from "@/lib/auth-server";
 import type { ImageStatus } from "@/data/imageData";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function getUserImageStatuses() {
@@ -76,7 +76,7 @@ export async function updateImageNotes(formData: FormData) {
   if (notes === "") {
     await db
       .delete(userImageNotes)
-      .where(eq(userImageNotes.userId, userId));
+      .where(and(eq(userImageNotes.userId, userId), eq(userImageNotes.imageId, imageId)));
   } else {
     await db
       .insert(userImageNotes)
