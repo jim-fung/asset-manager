@@ -37,14 +37,18 @@ export function useLocalStorageMigration() {
         if (statusData) formData.append("statusData", statusData);
         if (notesData) formData.append("notesData", notesData);
 
-        await fetch("/api/actions/migrate", {
+        const response = await fetch("/api/actions/migrate", {
           method: "POST",
           body: formData,
         });
 
-        localStorage.removeItem("iam-status-map");
-        localStorage.removeItem("iam-notes-map");
-        setHasMigrated(true);
+        if (response.ok) {
+          localStorage.removeItem("iam-status-map");
+          localStorage.removeItem("iam-notes-map");
+          setHasMigrated(true);
+        } else {
+          console.error("Migration request failed with status:", response.status);
+        }
       } catch (error) {
         console.error("Migration failed:", error);
       }
