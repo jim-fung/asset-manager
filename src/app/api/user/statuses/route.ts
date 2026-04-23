@@ -1,27 +1,18 @@
-import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { userImageStatuses } from "@/db/schema";
-import { getUserId } from "@/lib/auth-server";
+import type { ImageStatus } from "@/data/imageData";
 import { eq } from "drizzle-orm";
+import { createAuthenticatedGetHandler } from "@/lib/api-utils";
 
-export async function GET() {
-  try {
-    const userId = await getUserId();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const statuses = await db
-      .select()
-      .from(userImageStatuses)
-      .where(eq(userImageStatuses.userId, userId));
+export const GET = createAuthenticatedGetHandler(async (userId) => {
+  const statuses = await db
+    .select()
+    .from(userImageStatuses)
+    .where(eq(userImageStatuses.userId, userId));
 
-    const statusMap: Record<string, string> = {};
-    for (const status of statuses) {
-      statusMap[status.imageId] = status.status;
-    }
-    return NextResponse.json(statusMap);
-  } catch (error) {
-    console.error("Error fetching statuses:", error);
-    return NextResponse.json({}, { status: 500 });
+  const statusMap: Record<string, ImageStatus> = {};
+  for (const status of statuses) {
+    statusMap[status.imageId] = status.status;
   }
-}
+  return statusMap;
+}, "Error fetching statuses:");

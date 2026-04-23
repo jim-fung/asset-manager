@@ -73,7 +73,7 @@ export async function updateImageStatus(formData: FormData) {
     });
 
   revalidatePath("/");
-  revalidatePath("/book/[chapterId]");
+  revalidatePath("/", "layout");
 }
 
 export async function updateImageNotes(formData: FormData) {
@@ -108,5 +108,5 @@ export async function updateImageNotes(formData: FormData) {
   }
 
   revalidatePath("/");
-  revalidatePath("/book/[chapterId]");
+  revalidatePath("/", "layout");
 }

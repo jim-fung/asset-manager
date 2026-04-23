@@ -46,9 +46,9 @@ export async function assignDigiFileToChapter(formData: FormData) {
     });
 
   revalidatePath("/");
-  revalidatePath("/book/[chapterId]");
+  revalidatePath("/book/" + chapterId);
   revalidatePath("/digi-files");
-  revalidatePath("/digi-files/[collectionId]");
+  revalidatePath("/", "layout");
 }
 
 export async function unassignDigiFile(formData: FormData) {
@@ -69,7 +69,6 @@ export async function unassignDigiFile(formData: FormData) {
     );
 
   revalidatePath("/");
-  revalidatePath("/book/[chapterId]");
+  revalidatePath("/", "layout");
   revalidatePath("/digi-files");
-  revalidatePath("/digi-files/[collectionId]");
 }

@@ -6,6 +6,12 @@ import { requireUserId } from "@/lib/auth-server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+const ALLOWED_PREFERENCE_KEYS = new Set([
+  "theme",
+  "layout-density",
+  "sidebar-collapsed",
+]);
+
 function requireString(formData: FormData, key: string): string {
   const val = formData.get(key);
   if (typeof val !== "string") {
@@ -32,6 +38,10 @@ export async function updateUserPreference(formData: FormData) {
   const userId = await requireUserId();
   const key = requireString(formData, "key");
   const value = requireString(formData, "value");
+
+  if (!ALLOWED_PREFERENCE_KEYS.has(key)) {
+    throw new Error(`Unknown preference key: ${key}`);
+  }
 
   await db
     .insert(userUiPreferences)
