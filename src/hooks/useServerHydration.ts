@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSetAtom } from "jotai";
 import {
   serverStatusMapAtom,
@@ -8,9 +8,13 @@ import {
   serverAssignmentsAtom,
   serverPreferencesAtom,
   isHydratedAtom,
+  hydrationErrorAtom,
 } from "@/store/serverAtoms";
 import type { ImageStatus } from "@/data/imageData";
 import { useLocalStorageMigration } from "./useLocalStorageMigration";
+
+const MAX_RETRIES = 1;
+const RETRY_DELAY_MS = 2000;
 
 async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -26,30 +30,43 @@ export function useServerHydration() {
   const setAssignmentsMap = useSetAtom(serverAssignmentsAtom);
   const setPreferences = useSetAtom(serverPreferencesAtom);
   const setHydrated = useSetAtom(isHydratedAtom);
+  const setHydrationError = useSetAtom(hydrationErrorAtom);
   const { hasMigrated } = useLocalStorageMigration();
+  const retryCount = useRef(0);
+
+  const hydrate = useCallback(async () => {
+    try {
+      const [statuses, notes, assignments, preferences] = await Promise.all([
+        fetchJSON<Record<string, ImageStatus>>("/api/user/statuses"),
+        fetchJSON<Record<string, string>>("/api/user/notes"),
+        fetchJSON<Record<string, string>>("/api/user/assignments"),
+        fetchJSON<Record<string, string>>("/api/user/preferences"),
+      ]);
+
+      setStatusMap(statuses);
+      setNotesMap(notes);
+      setAssignmentsMap(assignments);
+      setPreferences(preferences);
+      setHydrated(true);
+      setHydrationError(null);
+    } catch (error) {
+      console.error("Failed to hydrate server data:", error);
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (retryCount.current < MAX_RETRIES) {
+        retryCount.current += 1;
+        console.warn(`Retrying hydration (attempt ${retryCount.current}/${MAX_RETRIES})...`);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        return hydrate();
+      }
+
+      setHydrationError(message);
+    }
+  }, [setStatusMap, setNotesMap, setAssignmentsMap, setPreferences, setHydrated, setHydrationError]);
 
   useEffect(() => {
-    async function hydrate() {
-      try {
-        const [statuses, notes, assignments, preferences] = await Promise.all([
-          fetchJSON<Record<string, ImageStatus>>("/api/user/statuses"),
-          fetchJSON<Record<string, string>>("/api/user/notes"),
-          fetchJSON<Record<string, string>>("/api/user/assignments"),
-          fetchJSON<Record<string, string>>("/api/user/preferences"),
-        ]);
-
-        setStatusMap(statuses);
-        setNotesMap(notes);
-        setAssignmentsMap(assignments);
-        setPreferences(preferences);
-        setHydrated(true);
-      } catch (error) {
-        console.error("Failed to hydrate server data:", error);
-      }
-    }
-
     if (hasMigrated) {
       hydrate();
     }
-  }, [hasMigrated, setStatusMap, setNotesMap, setAssignmentsMap, setPreferences, setHydrated]);
+  }, [hasMigrated, hydrate]);
 }

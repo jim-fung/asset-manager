@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { atomFamily } from "jotai/utils";
 import { images } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
 import { serverAssignmentsAtom, serverNotesMapAtom, serverStatusMapAtom } from "@/store/serverAtoms";
@@ -14,35 +15,29 @@ export const statusCountsAtom = atom((get) => {
 });
 
 /**
- * Factory function that creates a focused atom for reading/writing a single image's status.
- * Encapsulates the spread-update pattern.
- *
- * NOTE: This is a plain factory function, NOT a jotai `atomFamily`.
- * Callers MUST memoize the returned atom (e.g. with `useMemo`) to avoid
- * creating new atom instances on every render.
+ * Focused atom for reading/writing a single image's status.
+ * Uses atomFamily so callers don't need to memoize the returned atom.
  */
-export const imageStatusAtom = (id: string) =>
+export const imageStatusAtom = atomFamily((id: string) =>
   atom(
     (get): ImageStatus =>
       get(serverStatusMapAtom)[id] ?? "unset",
     (get, set, value: ImageStatus) =>
       set(serverStatusMapAtom, { ...get(serverStatusMapAtom), [id]: value }),
-  );
+  ),
+);
 
 /**
- * Factory function that creates a focused atom for reading/writing a single image's notes.
- * Encapsulates the spread-update pattern.
- *
- * NOTE: This is a plain factory function, NOT a jotai `atomFamily`.
- * Callers MUST memoize the returned atom (e.g. with `useMemo`) to avoid
- * creating new atom instances on every render.
+ * Focused atom for reading/writing a single image's notes.
+ * Uses atomFamily so callers don't need to memoize the returned atom.
  */
-export const imageNotesAtom = (id: string) =>
+export const imageNotesAtom = atomFamily((id: string) =>
   atom(
     (get): string => get(serverNotesMapAtom)[id] ?? "",
     (get, set, value: string) =>
       set(serverNotesMapAtom, { ...get(serverNotesMapAtom), [id]: value }),
-  );
+  ),
+);
 
 /**
  * Factory function that creates a focused atom for reading/writing a single digi-file's

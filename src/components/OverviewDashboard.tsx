@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
 import { chapters, images } from "@/data/imageData";
@@ -9,7 +9,6 @@ import { serverAssignmentsAtom } from "@/store/serverAtoms";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { useLightboxOpener } from "@/hooks/useLightboxOpener";
-import { useImageStatuses } from "@/hooks/useImageStatuses";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { ImageIcon } from "@/components/Icons";
@@ -22,12 +21,38 @@ import {
 } from "@/utils/viewModelHelpers";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
+interface OverviewGridItemProps {
+  image: typeof images[number];
+  onOpen: (imageId: string, triggerId: string) => void;
+}
+
+const OverviewGridItem = memo(function OverviewGridItem({ image, onOpen }: OverviewGridItemProps) {
+  const triggerId = `overview-image-${image.id}`;
+
+  return (
+    <button
+      type="button"
+      id={triggerId}
+      className="overview-image-button"
+      onClick={() => onOpen(image.id, triggerId)}
+      title={`${image.filename} ${image.section}`}
+      aria-label={`Openen ${image.filename}`}
+    >
+      <img
+        src={image.preview}
+        alt={getImageAltText(image)}
+        loading="lazy"
+      />
+      <div className={`image-card-status ${"unset"}`} aria-hidden="true" />
+    </button>
+  );
+});
+
 export function OverviewDashboard() {
   useDocumentTitle("Overzicht");
   const router = useRouter();
   const { imageId, setRouteState } = useSurfaceSearchState("overview");
   const openImage = useLightboxOpener(setRouteState);
-  const statusMap = useImageStatuses();
   const statusCounts = useAtomValue(statusCountsAtom);
   const assignments = useAtomValue(serverAssignmentsAtom);
   const selectedImageId = useSyncedImageId(images, imageId, setRouteState);
@@ -171,27 +196,9 @@ export function OverviewDashboard() {
           </div>
 
           <div className="overview-images-grid">
-            {images.map((img) => {
-              const s = resolveStatus(img.id, statusMap);
-              return (
-                <button
-                  key={img.id}
-                  type="button"
-                  id={`overview-image-${img.id}`}
-                  className="overview-image-button"
-                  onClick={() => openImage(img.id, `overview-image-${img.id}`)}
-                  title={`${img.filename} ${img.section}`}
-                  aria-label={`Openen ${img.filename}`}
-                >
-                  <img
-                    src={img.preview}
-                    alt={getImageAltText(img)}
-                    loading="lazy"
-                  />
-                  <div className={`image-card-status ${s}`} aria-hidden="true" />
-                </button>
-              );
-            })}
+            {images.map((img) => (
+              <OverviewGridItem key={img.id} image={img} onOpen={openImage} />
+            ))}
           </div>
         </section>
       </div>

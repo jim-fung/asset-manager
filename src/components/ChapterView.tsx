@@ -27,21 +27,20 @@ interface ChapterViewProps {
 }
 
 export function ChapterView({ chapterId }: ChapterViewProps) {
-  const chapter = getChapter(chapterId)!;
+  const chapter = getChapter(chapterId);
   useDocumentTitle(chapter ? `Hoofdstuk ${chapter.number}: ${chapter.title}` : undefined);
   const assignments = useAtomValue(serverAssignmentsAtom);
   const assignDigiFile = useAssignDigiFile();
   const unassignDigiFile = useUnassignDigiFile();
+  const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
+  const openImage = useLightboxOpener(setRouteState);
+  const statusMap = useImageStatuses();
+  const deferredSearchQuery = useDeferredValue(q);
 
   const allChapterViewModels: ServerImageViewModel[] = useMemo(
     () => getChapterContentsWithAssignments(chapterId, assignments, chapters, images, digiFiles),
     [chapterId, assignments],
   );
-
-  const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
-  const openImage = useLightboxOpener(setRouteState);
-  const statusMap = useImageStatuses();
-  const deferredSearchQuery = useDeferredValue(q);
 
   const filteredViewModels = useMemo(
     () =>
@@ -64,6 +63,19 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
   const handleRemoveFromChapter = async (digiFileId: string) => {
     await unassignDigiFile(digiFileId);
   };
+
+  if (!chapter) {
+    return (
+      <div className="page-content">
+        <section className="view-summary">
+          <div className="view-summary-copy">
+            <div className="content-section-label">Fout</div>
+            <h1 className="view-summary-title">Hoofdstuk niet gevonden</h1>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <>

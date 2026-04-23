@@ -15,7 +15,7 @@ interface LayoutProps {
 export function Layout({ sidebar, children }: LayoutProps) {
   const [isMobileOpen, setIsMobileOpen] = useAtom(mobileSidebarOpenAtom);
   const triggerId = useAtomValue(mobileSidebarTriggerIdAtom);
-  const [isSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
+  const isSidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
 
   // Restore focus to the trigger button when the mobile sidebar closes
   useEffect(() => {

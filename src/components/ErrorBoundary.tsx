@@ -8,16 +8,17 @@ interface ErrorBoundaryProps {
 
 interface ErrorBoundaryState {
   hasError: boolean;
+  error: Error | null;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
@@ -28,19 +29,28 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     window.location.reload();
   };
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
       return (
-        <div style={styles.container}>
+        <div style={styles.container} role="alert">
           <div style={styles.card}>
             <h1 style={styles.title}>Er is iets misgegaan</h1>
             <p style={styles.message}>
               Er is een onverwachte fout opgetreden. Herlaad de pagina om het
               opnieuw te proberen.
             </p>
-            <button onClick={this.handleReload} style={styles.button}>
-              Herladen
-            </button>
+            <div style={styles.buttonGroup}>
+              <button onClick={this.handleRetry} style={styles.secondaryButton}>
+                Opnieuw proberen
+              </button>
+              <button onClick={this.handleReload} style={styles.button}>
+                Herladen
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -83,12 +93,28 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.6,
     margin: "0 0 24px 0",
   },
+  buttonGroup: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "center",
+  },
   button: {
     fontSize: "1rem",
     fontWeight: 500,
     color: "#ffffff",
     backgroundColor: "#2563eb",
     border: "none",
+    borderRadius: "8px",
+    padding: "10px 24px",
+    cursor: "pointer",
+    transition: "background-color 0.15s ease",
+  },
+  secondaryButton: {
+    fontSize: "1rem",
+    fontWeight: 500,
+    color: "#374151",
+    backgroundColor: "#ffffff",
+    border: "1px solid #d1d5db",
     borderRadius: "8px",
     padding: "10px 24px",
     cursor: "pointer",

@@ -1,6 +1,7 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
+import { useAtomValue } from "jotai";
 import { Badge } from "@radix-ui/themes";
 import type { ServerImageViewModel } from "@/types/server";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
