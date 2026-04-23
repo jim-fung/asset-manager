@@ -1,33 +1,38 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const basicAuth = request.headers.get('authorization')
-  
-  if (basicAuth) {
-    const authValue = basicAuth.split(' ')[1]
-    if (authValue) {
-      try {
-        const decoded = Buffer.from(authValue, 'base64').toString('utf-8')
-        const [user, pwd] = decoded.split(':')
-        
-        if (user === 'admin' && pwd === '9498') {
-          return NextResponse.next()
-        }
-      } catch {
-        // Invalid base64
-      }
-    }
+const authPaths = ["/login", "/signup"];
+const apiPaths = ["/api/auth", "/api/user", "/api/actions"];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".") ||
+    pathname.startsWith("/previews")
+  ) {
+    return NextResponse.next();
   }
-  
-  return new NextResponse('Auth required', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Secure Area"',
-    },
-  })
+
+  if (authPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    const sessionToken =
+      request.cookies.get("better-auth.session_token")?.value ??
+      request.cookies.get("authjs.session-token")?.value;
+    if (sessionToken) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (apiPaths.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: '/:path*',
-}
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
