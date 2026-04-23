@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -167,6 +168,12 @@ export function ImageLightbox({
         ? (selectedImage.versions.print ?? selectedImage.src)
         : selectedImage.src
     : "";
+
+  useEffect(() => {
+    return () => {
+      if (notesTimerRef.current) clearTimeout(notesTimerRef.current);
+    };
+  }, []);
 
   return (
     <Dialog.Root
