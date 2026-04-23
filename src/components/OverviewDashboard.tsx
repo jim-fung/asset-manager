@@ -3,7 +3,9 @@
 import { useMemo } from "react";
 import { useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
-import { chapters, getChapterImages, images } from "@/data/imageData";
+import { chapters, images } from "@/data/imageData";
+import { digiFiles } from "@/data/digiFilesData";
+import { serverAssignmentsAtom } from "@/store/serverAtoms";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { useLightboxOpener } from "@/hooks/useLightboxOpener";
@@ -13,6 +15,11 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import { ImageIcon } from "@/components/Icons";
 import { statusCountsAtom } from "@/store/derivedAtoms";
 import { getImageAltText, resolveStatus } from "@/utils/imageHelpers";
+import { bookImageToViewModel } from "@/utils/viewModelHelpers";
+import {
+  getChapterContentsWithAssignments,
+  getChapterImageCountWithAssignments,
+} from "@/utils/viewModelHelpers";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function OverviewDashboard() {
@@ -22,6 +29,7 @@ export function OverviewDashboard() {
   const openImage = useLightboxOpener(setRouteState);
   const statusMap = useImageStatuses();
   const statusCounts = useAtomValue(statusCountsAtom);
+  const assignments = useAtomValue(serverAssignmentsAtom);
   const selectedImageId = useSyncedImageId(images, imageId, setRouteState);
 
   const stats = [
@@ -35,9 +43,21 @@ export function OverviewDashboard() {
     },
   ];
 
-  const chapterImagesMap = useMemo(
-    () => new Map(chapters.map((ch) => [ch.id, getChapterImages(ch.id)])),
-    [],
+  const chapterContentsMap = useMemo(
+    () =>
+      new Map(
+        chapters.map((ch) => [
+          ch.id,
+          getChapterContentsWithAssignments(
+            ch.id,
+            assignments,
+            chapters,
+            images,
+            digiFiles,
+          ),
+        ]),
+      ),
+    [assignments],
   );
 
   return (
@@ -89,8 +109,13 @@ export function OverviewDashboard() {
 
           <div className="chapter-cards-grid">
           {chapters.map((ch) => {
-            const chImages = chapterImagesMap.get(ch.id) ?? [];
-            const previewImages = chImages.slice(0, 4);
+            const chContents = chapterContentsMap.get(ch.id) ?? [];
+            const previewImages = chContents.slice(0, 4);
+            const dynamicCount = getChapterImageCountWithAssignments(
+              ch.id,
+              assignments,
+              images,
+            );
 
             return (
               <button
@@ -125,7 +150,7 @@ export function OverviewDashboard() {
                   <div className="chapter-card-desc">{ch.subtitle}</div>
                   <div className="chapter-card-meta">
                     <ImageIcon />
-                    <span>{ch.imageCount} beelden</span>
+                    <span>{dynamicCount} beelden</span>
                   </div>
                 </div>
               </button>
@@ -172,7 +197,7 @@ export function OverviewDashboard() {
       </div>
 
       <ImageLightbox
-        items={images}
+        items={images.map(bookImageToViewModel)}
         onRequestClose={() => setRouteState({ imageId: null })}
         onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
         selectedImageId={selectedImageId}

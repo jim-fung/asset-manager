@@ -5,15 +5,18 @@ import { useAtomValue, useSetAtom } from "jotai";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { chapters, images } from "@/data/imageData";
-import { digiCollections, digiFiles } from "@/data/digiFilesData";
+import { digiCollections } from "@/data/digiFilesData";
 import {
   buildSurfaceSearchString,
   readLooseRouteSearchState,
   type RouteSurface,
 } from "@/routeSearch";
 import { mobileSidebarOpenAtom, sidebarCollapsedAtom } from "@/store/atoms";
+import { serverAssignmentsAtom } from "@/store/serverAtoms";
 import { statusCountsAtom } from "@/store/derivedAtoms";
 import { statusConfig } from "@/utils/statusConfig";
+import { getChapterImageCountWithAssignments } from "@/utils/viewModelHelpers";
+import { digiFiles } from "@/data/digiFilesData";
 import { ConditionalTooltip } from "@/components/ConditionalTooltip";
 import { UserDisplay } from "@/components/UserDisplay";
 import {
@@ -29,6 +32,7 @@ export function Sidebar() {
   const setMobileSidebarOpen = useSetAtom(mobileSidebarOpenAtom);
   const isSidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
   const statusCounts = useAtomValue(statusCountsAtom);
+  const assignments = useAtomValue(serverAssignmentsAtom);
   const currentRouteState = useMemo(
     () => readLooseRouteSearchState(searchParams),
     [searchParams],
@@ -89,7 +93,7 @@ export function Sidebar() {
                     {ch.number !== null ? `${ch.number}. ` : ""}
                     {ch.title}
                   </span>
-                  <span className="sidebar-item-count">{ch.imageCount}</span>
+                  <span className="sidebar-item-count">{getChapterImageCountWithAssignments(ch.id, assignments, images)}</span>
                 </Link>
               </ConditionalTooltip>
             </li>

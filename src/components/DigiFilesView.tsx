@@ -1,25 +1,28 @@
 "use client";
 
 import { memo, useDeferredValue, useMemo, useState } from "react";
+import { useAtomValue } from "jotai";
 import { SegmentedControl, TextField } from "@radix-ui/themes";
 import {
   digiCollections,
   digiFiles,
   getCollection,
   getCollectionFiles,
-  digiFileToImageAsset,
   type DigiFile,
 } from "@/data/digiFilesData";
+import { chapters } from "@/data/imageData";
+import { serverAssignmentsAtom } from "@/store/serverAtoms";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { useLightboxOpener } from "@/hooks/useLightboxOpener";
+import { useAssignDigiFile } from "@/hooks/useAssignmentActions";
+import { digiFileToViewModel } from "@/utils/viewModelHelpers";
+import type { ServerImageViewModel } from "@/types/server";
 import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-
-// - DigiFilesView -
 
 interface DigiFilesViewProps {
   collectionId: string | null;
@@ -28,17 +31,17 @@ interface DigiFilesViewProps {
 export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
   const { imageId, q, setRouteState, view } = useSurfaceSearchState("digi");
   const openImage = useLightboxOpener(setRouteState);
+  const assignments = useAtomValue(serverAssignmentsAtom);
+  const assignDigiFile = useAssignDigiFile();
   const deferredSearchQuery = useDeferredValue(q);
 
   const collection = collectionId ? getCollection(collectionId) : null;
   useDocumentTitle(collection ? collection.label : "Digitale bestanden");
 
-  // Which files to show
   const sourceFiles = collectionId
     ? getCollectionFiles(collectionId)
     : digiFiles;
 
-  // Filter by search
   const filteredFiles = useMemo(() => {
     const trimmedQuery = deferredSearchQuery.trim().toLowerCase();
     if (!trimmedQuery) return sourceFiles;
@@ -47,20 +50,25 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
     );
   }, [deferredSearchQuery, sourceFiles]);
 
-  const filteredEntries = useMemo(
+  const filteredViewModels: ServerImageViewModel[] = useMemo(
     () =>
-      filteredFiles.map((file) => ({
-        file,
-        asset: digiFileToImageAsset(file),
-      })),
-    [filteredFiles],
+      filteredFiles.map((file) =>
+        digiFileToViewModel(file, assignments[file.id] ?? null, chapters),
+      ),
+    [filteredFiles, assignments],
   );
 
   const selectedImageId = useSyncedImageId(
-    filteredEntries.map((e) => e.asset),
+    filteredViewModels,
     imageId,
     setRouteState,
   );
+
+  const handleAssignDigiFile = (digiFileId: string, chapterId: string | null) => {
+    if (chapterId) {
+      assignDigiFile(digiFileId, chapterId);
+    }
+  };
 
   const title = collection ? collection.label : "Digitale bestanden";
   const subtitle = collection
@@ -137,14 +145,18 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
 
           {filteredFiles.length > 0 ? (
             <div className={`image-grid ${view === "list" ? "list-mode" : ""}`}>
-              {filteredEntries.map(({ file, asset }) => (
-                <DigiFileCard
-                  key={file.id}
-                  file={file}
-                  triggerId={`digi-file-${file.id}`}
-                  onClick={() => openImage(asset.id, `digi-file-${file.id}`)}
-                />
-              ))}
+              {filteredFiles.map((file, i) => {
+                const vm = filteredViewModels[i]!;
+                return (
+                  <DigiFileCard
+                    key={file.id}
+                    file={file}
+                    assignedChapterLabel={vm.assignedChapterLabel}
+                    triggerId={`digi-file-${file.id}`}
+                    onClick={() => openImage(vm.id, `digi-file-${file.id}`)}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="empty-state">
@@ -156,10 +168,11 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
       </div>
 
       <ImageLightbox
-        items={filteredEntries.map((entry) => entry.asset)}
+        items={filteredViewModels}
         onRequestClose={() => setRouteState({ imageId: null })}
         onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
         selectedImageId={selectedImageId}
+        onAssignDigiFile={handleAssignDigiFile}
       />
     </>
   );
@@ -169,11 +182,12 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
 
 interface DigiFileCardProps {
   file: DigiFile;
+  assignedChapterLabel: string | null;
   onClick: () => void;
   triggerId: string;
 }
 
-const DigiFileCard = memo(function DigiFileCard({ file, onClick, triggerId }: DigiFileCardProps) {
+const DigiFileCard = memo(function DigiFileCard({ file, assignedChapterLabel, onClick, triggerId }: DigiFileCardProps) {
   const [imgError, setImgError] = useState(false);
   const col = getCollection(file.collectionId);
   const altText = col ? `${file.filename} uit ${col.label}` : file.filename;
@@ -199,6 +213,9 @@ const DigiFileCard = memo(function DigiFileCard({ file, onClick, triggerId }: Di
         )}
         {file.originalFormat === "tiff" && (
           <span className="image-card-status-badge">TIFF-JPG</span>
+        )}
+        {assignedChapterLabel && (
+          <span className="image-card-assignment-badge">{assignedChapterLabel}</span>
         )}
       </div>
       <div className="image-card-info">

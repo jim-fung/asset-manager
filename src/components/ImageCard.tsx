@@ -2,18 +2,19 @@
 
 import { memo } from "react";
 import { Badge } from "@radix-ui/themes";
-import type { ImageAsset } from "@/data/imageData";
+import type { ServerImageViewModel } from "@/types/server";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
 import { resolveStatus, getImageAltText } from "@/utils/imageHelpers";
 import { statusConfig } from "@/utils/statusConfig";
 
 interface ImageCardProps {
-  image: ImageAsset;
+  image: ServerImageViewModel;
   onClick: () => void;
   triggerId?: string;
+  onRemove?: () => void;
 }
 
-export const ImageCard = memo(function ImageCard({ image, onClick, triggerId }: ImageCardProps) {
+export const ImageCard = memo(function ImageCard({ image, onClick, triggerId, onRemove }: ImageCardProps) {
   const statusMap = useImageStatuses();
   const status = resolveStatus(image.id, statusMap);
   const altText = getImageAltText(image);
@@ -34,6 +35,20 @@ export const ImageCard = memo(function ImageCard({ image, onClick, triggerId }: 
           title={label}
           aria-hidden="true"
         />
+        {onRemove && (
+          <button
+            type="button"
+            className="image-card-remove-btn"
+            aria-label="Verwijderen uit hoofdstuk"
+            title="Verwijderen uit hoofdstuk"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+          >
+            &times;
+          </button>
+        )}
       </div>
       <div className="image-card-info">
         <div className="image-card-filename">{image.filename}</div>

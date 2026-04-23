@@ -1,12 +1,18 @@
 "use client";
 
 import { useDeferredValue, useMemo } from "react";
+import { useAtomValue } from "jotai";
 import { Button, SegmentedControl, TextField } from "@radix-ui/themes";
-import { getChapter, getChapterImages } from "@/data/imageData";
+import { chapters, getChapter, images } from "@/data/imageData";
+import { digiFiles } from "@/data/digiFilesData";
+import { serverAssignmentsAtom } from "@/store/serverAtoms";
 import { useSurfaceSearchState } from "@/hooks/useSurfaceSearchState";
 import { useSyncedImageId } from "@/hooks/useSyncedImageId";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
 import { useLightboxOpener } from "@/hooks/useLightboxOpener";
+import { useAssignDigiFile, useUnassignDigiFile } from "@/hooks/useAssignmentActions";
+import { getChapterContentsWithAssignments } from "@/utils/viewModelHelpers";
+import type { ServerImageViewModel } from "@/types/server";
 import type { RouteViewMode } from "@/routeSearch";
 import { Header } from "@/components/Header";
 import { ImageCard } from "@/components/ImageCard";
@@ -23,23 +29,41 @@ interface ChapterViewProps {
 export function ChapterView({ chapterId }: ChapterViewProps) {
   const chapter = getChapter(chapterId)!;
   useDocumentTitle(chapter ? `Hoofdstuk ${chapter.number}: ${chapter.title}` : undefined);
-  const allChapterImages = getChapterImages(chapterId);
+  const assignments = useAtomValue(serverAssignmentsAtom);
+  const assignDigiFile = useAssignDigiFile();
+  const unassignDigiFile = useUnassignDigiFile();
+
+  const allChapterViewModels: ServerImageViewModel[] = useMemo(
+    () => getChapterContentsWithAssignments(chapterId, assignments, chapters, images, digiFiles),
+    [chapterId, assignments],
+  );
+
   const { imageId, q, setRouteState, status, view } = useSurfaceSearchState("book");
   const openImage = useLightboxOpener(setRouteState);
   const statusMap = useImageStatuses();
   const deferredSearchQuery = useDeferredValue(q);
 
-  const filteredImages = useMemo(
+  const filteredViewModels = useMemo(
     () =>
-      allChapterImages.filter(
+      allChapterViewModels.filter(
         allOf(matchesQuery(deferredSearchQuery), matchesStatus(status, statusMap)),
       ),
-    [allChapterImages, deferredSearchQuery, status, statusMap],
+    [allChapterViewModels, deferredSearchQuery, status, statusMap],
   );
 
   const activeFilterLabel =
     statusFilterOptions.find((filter) => filter.value === status)?.label ?? "Alles";
-  const selectedImageId = useSyncedImageId(filteredImages, imageId, setRouteState);
+  const selectedImageId = useSyncedImageId(filteredViewModels, imageId, setRouteState);
+
+  const handleAssignDigiFile = (digiFileId: string, chapterId: string | null) => {
+    if (chapterId) {
+      assignDigiFile(digiFileId, chapterId);
+    }
+  };
+
+  const handleRemoveFromChapter = async (digiFileId: string) => {
+    await unassignDigiFile(digiFileId);
+  };
 
   return (
     <>
@@ -104,11 +128,11 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           <div className="view-summary-stats">
             <div className="view-summary-stat">
               <span>Zichtbaar</span>
-              <strong>{filteredImages.length}</strong>
+              <strong>{filteredViewModels.length}</strong>
             </div>
             <div className="view-summary-stat">
               <span>Totaal</span>
-              <strong>{allChapterImages.length}</strong>
+              <strong>{allChapterViewModels.length}</strong>
             </div>
             <div className="view-summary-stat">
               <span>Filter</span>
@@ -128,14 +152,15 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
             </div>
           </div>
 
-          {filteredImages.length > 0 ? (
+          {filteredViewModels.length > 0 ? (
             <div className={`image-grid ${view === "list" ? "list-mode" : ""}`}>
-              {filteredImages.map((img) => (
+              {filteredViewModels.map((vm) => (
                 <ImageCard
-                  key={img.id}
-                  image={img}
-                  triggerId={`chapter-image-${img.id}`}
-                  onClick={() => openImage(img.id, `chapter-image-${img.id}`)}
+                  key={vm.id}
+                  image={vm}
+                  triggerId={`chapter-image-${vm.id}`}
+                  onClick={() => openImage(vm.id, `chapter-image-${vm.id}`)}
+                  onRemove={vm.canRemoveFromChapter ? () => handleRemoveFromChapter(vm.id) : undefined}
                 />
               ))}
             </div>
@@ -151,10 +176,11 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
       </div>
 
       <ImageLightbox
-        items={filteredImages}
+        items={filteredViewModels}
         onRequestClose={() => setRouteState({ imageId: null })}
         onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
         selectedImageId={selectedImageId}
+        onAssignDigiFile={handleAssignDigiFile}
       />
     </>
   );
