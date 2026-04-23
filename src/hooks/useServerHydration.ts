@@ -9,7 +9,7 @@ import {
   serverPreferencesAtom,
   isHydratedAtom,
 } from "@/store/serverAtoms";
-import { ImageStatus } from "@/data/imageData";
+import type { ImageStatus } from "@/data/imageData";
 import { useLocalStorageMigration } from "./useLocalStorageMigration";
 
 async function fetchJSON<T>(url: string): Promise<T> {
