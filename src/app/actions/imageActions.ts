@@ -7,6 +7,16 @@ import type { ImageStatus } from "@/data/imageData";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+const VALID_STATUSES: Set<string> = new Set(["approved", "review", "needs-replacement", "unset"]);
+
+function requireString(formData: FormData, key: string): string {
+  const val = formData.get(key);
+  if (typeof val !== "string") {
+    throw new Error(`${key} must be a string`);
+  }
+  return val;
+}
+
 export async function getUserImageStatuses() {
   const userId = await requireUserId();
   const statuses = await db
@@ -37,25 +47,27 @@ export async function getUserImageNotes() {
 
 export async function updateImageStatus(formData: FormData) {
   const userId = await requireUserId();
-  const imageId = formData.get("imageId") as string;
-  const status = formData.get("status") as ImageStatus;
+  const imageId = requireString(formData, "imageId");
+  const status = requireString(formData, "status");
 
-  if (!imageId || !status) {
-    throw new Error("Missing required fields");
+  if (!VALID_STATUSES.has(status)) {
+    throw new Error(`Invalid status value: ${status}`);
   }
+
+  const typedStatus = status as ImageStatus;
 
   await db
     .insert(userImageStatuses)
     .values({
       userId,
       imageId,
-      status,
+      status: typedStatus,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: [userImageStatuses.userId, userImageStatuses.imageId],
       set: {
-        status,
+        status: typedStatus,
         updatedAt: new Date(),
       },
     });
@@ -66,11 +78,11 @@ export async function updateImageStatus(formData: FormData) {
 
 export async function updateImageNotes(formData: FormData) {
   const userId = await requireUserId();
-  const imageId = formData.get("imageId") as string;
-  const notes = formData.get("notes") as string;
+  const imageId = requireString(formData, "imageId");
+  const notes = formData.get("notes");
 
-  if (!imageId || notes === null) {
-    throw new Error("Missing required fields");
+  if (typeof notes !== "string") {
+    throw new Error("notes must be a string");
   }
 
   if (notes === "") {
