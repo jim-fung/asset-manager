@@ -13,7 +13,7 @@ import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { ImageIcon } from "@/components/Icons";
 import { statusCountsAtom } from "@/store/derivedAtoms";
-import { getImageAltText, resolveStatus } from "@/utils/imageHelpers";
+import { getImageAltText } from "@/utils/imageHelpers";
 import { bookImageToViewModel } from "@/utils/viewModelHelpers";
 import {
   getChapterContentsWithAssignments,
@@ -42,6 +42,8 @@ const OverviewGridItem = memo(function OverviewGridItem({ image, onOpen }: Overv
         src={image.preview}
         alt={getImageAltText(image)}
         loading="lazy"
+        data-image-id={image.id}
+        data-source-type="book"
       />
       <div className={`image-card-status ${"unset"}`} aria-hidden="true" />
     </button>
@@ -157,6 +159,8 @@ export function OverviewDashboard() {
                       src={img.preview}
                       alt={getImageAltText(img)}
                       loading="lazy"
+                      data-image-id={img.id}
+                      data-source-type={img.sourceType}
                     />
                   ))}
                   {/* Fill empty preview slots with dark placeholders */}
@@ -204,7 +208,7 @@ export function OverviewDashboard() {
       </div>
 
       <ImageLightbox
-        items={images.map(bookImageToViewModel)}
+        items={images.map((image) => bookImageToViewModel(image, assignments, chapters))}
         onRequestClose={() => setRouteState({ imageId: null })}
         onRequestSelectImage={(nextImage) => setRouteState({ imageId: nextImage.id })}
         selectedImageId={selectedImageId}

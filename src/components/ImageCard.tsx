@@ -1,7 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
-import { useAtomValue } from "jotai";
+import { memo } from "react";
 import { Badge } from "@radix-ui/themes";
 import type { ServerImageViewModel } from "@/types/server";
 import { useImageStatuses } from "@/hooks/useImageStatuses";
@@ -30,7 +29,13 @@ export const ImageCard = memo(function ImageCard({ image, onClick, triggerId, on
       aria-label={`Openen ${image.filename}`}
     >
       <div className="image-card-thumb">
-        <img src={image.preview} alt={altText} loading="lazy" />
+        <img
+          src={image.preview}
+          alt={altText}
+          loading="lazy"
+          data-image-id={image.id}
+          data-source-type={image.sourceType}
+        />
         <div
           className={`image-card-status ${status}`}
           title={label}

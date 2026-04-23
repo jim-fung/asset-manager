@@ -208,6 +208,8 @@ const DigiFileCard = memo(function DigiFileCard({ file, assignedChapterLabel, on
             src={file.preview}
             alt={altText}
             loading="lazy"
+            data-image-id={file.id}
+            data-source-type="digi"
             onError={() => setImgError(true)}
           />
         )}
