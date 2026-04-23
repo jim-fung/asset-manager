@@ -1,38 +1,19 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const authPaths = ["/login", "/signup"];
-const apiPaths = ["/api/auth", "/api/user", "/api/actions"];
+const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
+const isApiRoute = createRouteMatcher(["/api(.*)", "/trpc(.*)"]);
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".") ||
-    pathname.startsWith("/previews")
-  ) {
-    return NextResponse.next();
+export default clerkMiddleware(async (auth, req) => {
+  if (isApiRoute(req) || isAuthRoute(req)) {
+    return;
   }
 
-  if (authPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-    const sessionToken =
-      request.cookies.get("better-auth.session_token")?.value ??
-      request.cookies.get("authjs.session-token")?.value;
-    if (sessionToken) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return NextResponse.next();
-  }
-
-  if (apiPaths.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
-  return NextResponse.next();
-}
+  await auth.protect();
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
 };

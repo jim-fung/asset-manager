@@ -1,35 +1,37 @@
-import { auth } from "./auth";
-import { headers } from "next/headers";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export async function getSession() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  return session;
+  return await auth();
 }
 
 export async function getCurrentUser() {
-  const session = await getSession();
-  return session?.user ?? null;
+  const session = await auth();
+  if (!session.userId) return null;
+  const client = await clerkClient();
+  const user = await client.users.getUser(session.userId);
+  return {
+    id: user.id,
+    email: user.emailAddresses[0]?.emailAddress ?? null,
+    name: user.fullName ?? user.username ?? null,
+    image: user.imageUrl ?? null,
+  };
 }
 
 export async function requireAuth() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/login");
+  const session = await auth();
+  if (!session.userId) {
+    redirect("/sign-in");
   }
   return session;
 }
 
 export async function requireUserId() {
   const session = await requireAuth();
-  return session.user.id;
+  return session.userId;
 }
 
-/** Returns the authenticated user's ID, or null if not authenticated.
- *  Use this in API routes where redirect() is not appropriate. */
 export async function getUserId(): Promise<string | null> {
-  const session = await getSession();
-  return session?.user?.id ?? null;
+  const session = await auth();
+  return session.userId ?? null;
 }

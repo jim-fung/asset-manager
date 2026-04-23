@@ -26,7 +26,6 @@
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
     "noUncheckedSideEffectImports": false,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "@/index.css";
 import { Suspense } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
@@ -10,17 +12,25 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg" },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { userId } = await auth();
+
   return (
     <html lang="nl">
       <body>
-        <Providers>
-          <Suspense>{children}</Suspense>
-        </Providers>
+        <ClerkProvider>
+          {userId ? (
+            <Providers>
+              <Suspense>{children}</Suspense>
+            </Providers>
+          ) : (
+            <Suspense>{children}</Suspense>
+          )}
+        </ClerkProvider>
       </body>
     </html>
   );
