@@ -35,33 +35,40 @@ export function useServerHydration() {
   const retryCount = useRef(0);
 
   const hydrate = useCallback(async () => {
-    try {
-      const [statuses, notes, assignments, preferences] = await Promise.all([
-        fetchJSON<Record<string, ImageStatus>>("/api/user/statuses"),
-        fetchJSON<Record<string, string>>("/api/user/notes"),
-        fetchJSON<Record<string, string>>("/api/user/assignments"),
-        fetchJSON<Record<string, string>>("/api/user/preferences"),
-      ]);
+    retryCount.current = 0;
+    let lastError: string | null = null;
 
-      setStatusMap(statuses);
-      setNotesMap(notes);
-      setAssignmentsMap(assignments);
-      setPreferences(preferences);
-      setHydrated(true);
-      setHydrationError(null);
-    } catch (error) {
-      console.error("Failed to hydrate server data:", error);
-      const message = error instanceof Error ? error.message : String(error);
+    while (retryCount.current <= MAX_RETRIES) {
+      try {
+        const [statuses, notes, assignments, preferences] = await Promise.all([
+          fetchJSON<Record<string, ImageStatus>>("/api/user/statuses"),
+          fetchJSON<Record<string, string>>("/api/user/notes"),
+          fetchJSON<Record<string, string>>("/api/user/assignments"),
+          fetchJSON<Record<string, string>>("/api/user/preferences"),
+        ]);
 
-      if (retryCount.current < MAX_RETRIES) {
-        retryCount.current += 1;
-        console.warn(`Retrying hydration (attempt ${retryCount.current}/${MAX_RETRIES})...`);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-        return hydrate();
+        setStatusMap(statuses);
+        setNotesMap(notes);
+        setAssignmentsMap(assignments);
+        setPreferences(preferences);
+        setHydrated(true);
+        setHydrationError(null);
+        return;
+      } catch (error) {
+        console.error("Failed to hydrate server data:", error);
+        lastError = error instanceof Error ? error.message : String(error);
+
+        if (retryCount.current < MAX_RETRIES) {
+          retryCount.current += 1;
+          console.warn(`Retrying hydration (attempt ${retryCount.current}/${MAX_RETRIES})...`);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        } else {
+          break;
+        }
       }
-
-      setHydrationError(message);
     }
+
+    setHydrationError(lastError);
   }, [setStatusMap, setNotesMap, setAssignmentsMap, setPreferences, setHydrated, setHydrationError]);
 
   useEffect(() => {
