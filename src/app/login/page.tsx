@@ -27,8 +27,10 @@ export default function LoginPage() {
       });
       router.push("/");
       router.refresh();
-    } catch {
-      setError("Ongeldige e-mail of wachtwoord");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message :
+        (err as { error?: { message?: string } })?.error?.message ?? "";
+      setError(message || "Ongeldige e-mail of wachtwoord");
     } finally {
       setLoading(false);
     }
@@ -65,6 +67,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                minLength={8}
               />
             </label>
 

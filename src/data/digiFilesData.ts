@@ -29,7 +29,7 @@ function makeFile(
   collectionId: string,
   originalFormat: "jpeg" | "tiff" = "jpeg",
 ): DigiFile {
-  const preview = `/previews/digi-files/${collectionId}/${filename.replace(/\.[^.]+$/, ".jpg")}`;
+  const preview = `/previews/digi-files/${collectionId}/${encodeURIComponent(filename.replace(/\.[^.]+$/, ".jpg"))}`;
   return {
     id: `${collectionId}__${filename}`,
     filename,

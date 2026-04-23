@@ -14,12 +14,19 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (password !== confirmPassword) {
+      setError("Wachtwoorden komen niet overeen");
+      setLoading(false);
+      return;
+    }
 
     try {
       await authClient.signUp.email({
@@ -29,8 +36,10 @@ export default function SignupPage() {
       });
       router.push("/");
       router.refresh();
-    } catch {
-      setError("Registratie mislukt. Probeer het opnieuw.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message :
+        (err as { error?: { message?: string } })?.error?.message ?? "";
+      setError(message || "Registratie mislukt. Probeer het opnieuw.");
     } finally {
       setLoading(false);
     }
@@ -76,6 +85,18 @@ export default function SignupPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
+            </label>
+
+            <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Wachtwoord bevestigen</span>
+              <TextField.Root
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 minLength={8}

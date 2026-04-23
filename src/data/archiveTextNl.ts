@@ -7,10 +7,10 @@ const exactTranslations: Record<string, string> = {
   "Spirit of the Tides": "Geest van de getijden",
   "Spirits of the Dance": "Geesten van de dans",
   "The Last Dance": "De laatste dans",
-  "Zoo humain: Les indig?nes des Cara?bes": "Mensentuin: de inheemsen van de Cariben",
-  "Zoo humain : Les indig?nes des Cara?bes au jardin d":
+  "Zoo humain: Les indigènes des Caraïbes": "Mensentuin: de inheemsen van de Cariben",
+  "Zoo humain : Les indigènes des Caraïbes au jardin d":
     "Mensentuin: de inheemsen van de Cariben in de Jardin d'Acclimatation",
-  "Zoo humain: Les indig?nes des Cara?bes au Jardin d'Acclimatation, Paris (1892)":
+  "Zoo humain: Les indigènes des Caraïbes au Jardin d'Acclimatation, Paris (1892)":
     "Mensentuin: de inheemsen van de Cariben in de Jardin d'Acclimatation, Parijs (1892)",
   "Zoo humain: Caribbean Indians exhibited at the Jardin d'Acclimatation, Paris (1892)":
     "Mensentuin: Caribische inheemsen tentoongesteld in de Jardin d'Acclimatation, Parijs (1892)",
@@ -69,8 +69,8 @@ const exactTranslations: Record<string, string> = {
     "Nationaal Monument der Inheemsen - Winstons ontwerpvoorstel",
   "Werehpai Petroglyph site - petroglyphs in the rainforest":
     "Locatie van de Werehpai-petroglief - petrogliefen in het regenwoud",
-  "Paranak?r? - de geesten uit de zee (Spirits from the Sea)":
-    "Paranak?r? - de geesten uit de zee (Geesten uit de zee)",
+  "Paranakërë - de geesten uit de zee (Spirits from the Sea)":
+    "Paranakërë - de geesten uit de zee (Geesten uit de zee)",
   "Prepared from TIFF-origin source material":
     "Voorbereid vanuit bronmateriaal met TIFF-oorsprong",
 };

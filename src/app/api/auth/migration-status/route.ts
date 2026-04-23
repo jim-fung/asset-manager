@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { hasMigratedLocalStorage } from "@/app/actions/migrationActions";
+import { getUserId } from "@/lib/auth-server";
+import { db } from "@/db";
+import { userUiPreferences } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function GET() {
-  try {
-    const migrated = await hasMigratedLocalStorage();
-    return NextResponse.json({ migrated });
-  } catch (error) {
-    if (isRedirectError(error)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    console.error("Error checking migration status:", error);
-    return NextResponse.json({ migrated: false });
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const prefs = await db
+    .select()
+    .from(userUiPreferences)
+    .where(eq(userUiPreferences.userId, userId));
+  const migrated = prefs.some(
+    (p) => p.preferenceKey === "migrated-local-storage" && p.preferenceValue === "true"
+  );
+  return NextResponse.json({ migrated });
 }

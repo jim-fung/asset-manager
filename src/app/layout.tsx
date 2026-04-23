@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "@/index.css";
-import "@radix-ui/themes/styles.css";
 import { Suspense } from "react";
 import { Providers } from "@/components/Providers";
 
