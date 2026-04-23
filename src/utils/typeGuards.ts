@@ -1,11 +1,7 @@
 import type { ImageStatus, ImageVersion } from "@/data/imageData";
+import { statusConfig } from "./statusConfig";
 
-const IMAGE_STATUSES: readonly string[] = [
-  "approved",
-  "review",
-  "needs-replacement",
-  "unset",
-];
+const IMAGE_STATUSES = Object.keys(statusConfig);
 const IMAGE_VERSIONS: readonly string[] = ["regular", "optimized", "print"];
 
 export function isImageStatus(value: string): value is ImageStatus {

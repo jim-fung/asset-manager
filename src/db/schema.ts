@@ -10,11 +10,8 @@ export const users = pgTable(
     name: varchar("name", { length: 255 }),
     image: text("image"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
-  },
-  (table) => ({
-    emailIdx: index("users_email_idx").on(table.email),
-  })
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
+  }
 );
 
 export const sessions = pgTable(
@@ -29,7 +26,7 @@ export const sessions = pgTable(
     userAgent: text("user_agent"),
     expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("sessions_user_id_idx").on(table.userId),
@@ -51,7 +48,7 @@ export const accounts = pgTable(
     expiresAt: timestamp("expires_at", { mode: "date" }),
     password: varchar("password", { length: 255 }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("accounts_user_id_idx").on(table.userId),
@@ -81,7 +78,7 @@ export const userImageStatuses = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     imageId: varchar("image_id", { length: 255 }).notNull(),
     status: varchar("status", { length: 50 }).notNull().$type<ImageStatus>(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.imageId] }),
@@ -97,7 +94,7 @@ export const userImageNotes = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     imageId: varchar("image_id", { length: 255 }).notNull(),
     notes: text("notes").notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.imageId] }),
@@ -130,7 +127,7 @@ export const userUiPreferences = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     preferenceKey: varchar("preference_key", { length: 255 }).notNull(),
     preferenceValue: text("preference_value").notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.preferenceKey] }),
