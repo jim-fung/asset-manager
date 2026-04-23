@@ -49,7 +49,7 @@ export const accounts = pgTable(
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
     expiresAt: timestamp("expires_at", { mode: "date" }),
-    password: varchar("password", { length: 255 }).notNull(),
+    password: varchar("password", { length: 255 }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
