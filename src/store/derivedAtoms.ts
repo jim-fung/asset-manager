@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { images } from "@/data/imageData";
 import type { ImageStatus } from "@/data/imageData";
-import { serverNotesMapAtom, serverStatusMapAtom } from "@/store/serverAtoms";
+import { serverAssignmentsAtom, serverNotesMapAtom, serverStatusMapAtom } from "@/store/serverAtoms";
 import { computeStatusCounts } from "@/utils/imageHelpers";
 
 /**
@@ -42,4 +42,26 @@ export const imageNotesAtom = (id: string) =>
     (get): string => get(serverNotesMapAtom)[id] ?? "",
     (get, set, value: string) =>
       set(serverNotesMapAtom, { ...get(serverNotesMapAtom), [id]: value }),
+  );
+
+/**
+ * Factory function that creates a focused atom for reading/writing a single digi-file's
+ * chapter assignment. Encapsulates the spread-update pattern.
+ *
+ * NOTE: This is a plain factory function, NOT a jotai `atomFamily`.
+ * Callers MUST memoize the returned atom (e.g. with `useMemo`) to avoid
+ * creating new atom instances on every render.
+ */
+export const digiFileAssignmentAtom = (digiFileId: string) =>
+  atom(
+    (get): string | null => get(serverAssignmentsAtom)[digiFileId] ?? null,
+    (get, set, value: string | null) => {
+      const current = { ...get(serverAssignmentsAtom) };
+      if (value === null) {
+        delete current[digiFileId];
+      } else {
+        current[digiFileId] = value;
+      }
+      set(serverAssignmentsAtom, current);
+    },
   );

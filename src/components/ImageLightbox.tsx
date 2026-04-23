@@ -3,6 +3,7 @@
 import {
   useCallback,
   useMemo,
+  useRef,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useAtom, useAtomValue } from "jotai";
@@ -16,19 +17,26 @@ import {
   activeVersionAtom,
   lightboxTriggerIdAtom,
 } from "@/store/atoms";
-import { imageNotesAtom, imageStatusAtom } from "@/store/derivedAtoms";
-import type { ImageAsset, ImageVersion } from "@/data/imageData";
+import { serverAssignmentsAtom, serverNotesMapAtom, serverStatusMapAtom } from "@/store/serverAtoms";
+import { chapters } from "@/data/imageData";
+import type { ImageVersion } from "@/data/imageData";
+import type { ServerImageViewModel } from "@/types/server";
 import { getImageAltText } from "@/utils/imageHelpers";
 import { statusSelectOptions } from "@/utils/statusConfig";
 import { isImageStatus, isImageVersion } from "@/utils/typeGuards";
+import { useUpdateImageStatus } from "@/hooks/useUpdateImageStatus";
+import { useUpdateImageNotes } from "@/hooks/useUpdateImageNotes";
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from "@/components/Icons";
 
 interface ImageLightboxProps {
-  items: readonly ImageAsset[];
+  items: readonly ServerImageViewModel[];
   onRequestClose: () => void;
-  onRequestSelectImage: (image: ImageAsset) => void;
+  onRequestSelectImage: (image: ServerImageViewModel) => void;
   selectedImageId: string | null;
+  onAssignDigiFile?: (digiFileId: string, chapterId: string | null) => void;
 }
+
+const UNASSIGNED_VALUE = "__none__";
 
 const versionTabs: readonly { readonly value: ImageVersion; readonly label: string }[] = [
   { value: "regular", label: "Standaard" },
@@ -36,7 +44,6 @@ const versionTabs: readonly { readonly value: ImageVersion; readonly label: stri
   { value: "print", label: "Drukklaar" },
 ];
 
-/** Prevent arrow-key navigation from firing while the user is typing */
 const isTextInput = (target: EventTarget | null): boolean =>
   target instanceof HTMLInputElement ||
   target instanceof HTMLTextAreaElement ||
@@ -48,29 +55,36 @@ export function ImageLightbox({
   onRequestClose,
   onRequestSelectImage,
   selectedImageId,
+  onAssignDigiFile,
 }: ImageLightboxProps) {
   const [activeVersion, setActiveVersion] = useAtom(activeVersionAtom);
   const lightboxTriggerId = useAtomValue(lightboxTriggerIdAtom);
+  const statusMap = useAtomValue(serverStatusMapAtom);
+  const notesMap = useAtomValue(serverNotesMapAtom);
+  const assignmentsMap = useAtomValue(serverAssignmentsAtom);
+  const persistStatus = useUpdateImageStatus();
+  const persistNotes = useUpdateImageNotes();
+  const notesTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const selectedImage = useMemo(
     () => items.find((item) => item.id === selectedImageId) ?? null,
     [items, selectedImageId],
   );
 
-  // Per-image focused atoms (stable for the selected image)
-  const statusAtom = useMemo(
-    () => imageStatusAtom(selectedImage?.id ?? ""),
-    [selectedImage?.id],
-  );
-  const notesAtom = useMemo(
-    () => imageNotesAtom(selectedImage?.id ?? ""),
-    [selectedImage?.id],
-  );
-  const [currentStatus, setCurrentStatus] = useAtom(statusAtom);
-  const [currentNotes, setCurrentNotes] = useAtom(notesAtom);
+  const isDigi = selectedImage?.sourceType === "digi";
 
-  /** Reset to the default version whenever a new image is opened */
-  // Using a ref to track previous image avoids useEffect for this
+  const currentStatus: string = selectedImage
+    ? (statusMap[selectedImage.id] ?? "unset")
+    : "unset";
+
+  const currentNotes: string = selectedImage
+    ? (notesMap[selectedImage.id] ?? "")
+    : "";
+
+  const assignedChapterId: string | null = selectedImage && isDigi
+    ? (assignmentsMap[selectedImage.id] ?? null)
+    : null;
+
   const currentIndex = selectedImage
     ? Math.max(
         items.findIndex((item) => item.id === selectedImage.id),
@@ -103,6 +117,36 @@ export function ImageLightbox({
     [goTo],
   );
 
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      if (!selectedImage || !isImageStatus(value)) return;
+      persistStatus(selectedImage.id, value);
+    },
+    [selectedImage, persistStatus],
+  );
+
+  const handleNotesChange = useCallback(
+    (value: string) => {
+      if (!selectedImage) return;
+      if (notesTimerRef.current) {
+        clearTimeout(notesTimerRef.current);
+      }
+      notesTimerRef.current = setTimeout(() => {
+        persistNotes(selectedImage.id, value);
+      }, 600);
+    },
+    [selectedImage, persistNotes],
+  );
+
+  const handleChapterChange = useCallback(
+    (value: string) => {
+      if (!selectedImage || !isDigi || !onAssignDigiFile) return;
+      const chapterId = value === UNASSIGNED_VALUE ? null : value;
+      onAssignDigiFile(selectedImage.id, chapterId);
+    },
+    [selectedImage, isDigi, onAssignDigiFile],
+  );
+
   const altText = selectedImage ? getImageAltText(selectedImage) : "";
 
   const versionAvailable: Readonly<Record<ImageVersion, boolean>> = selectedImage
@@ -132,7 +176,6 @@ export function ImageLightbox({
       }}
     >
       <Dialog.Content
-        /* Make the dialog fill the full viewport */
         width="100vw"
         height="100dvh"
         maxWidth="100vw"
@@ -148,11 +191,9 @@ export function ImageLightbox({
         }}
         onKeyDown={handleKeyDown}
         onOpenAutoFocus={() => {
-          /* Reset version tab when a new image opens */
           setActiveVersion("regular");
         }}
         onCloseAutoFocus={(e) => {
-          /* Restore focus to the card that opened the lightbox */
           e.preventDefault();
           const triggerElement = lightboxTriggerId
             ? (document.getElementById(lightboxTriggerId) as HTMLElement | null)
@@ -162,7 +203,6 @@ export function ImageLightbox({
       >
         {selectedImage && (
           <>
-            {/* ── Image side ─────────────────────────────────────── */}
             <div className="lightbox-content">
               <Dialog.Close>
                 <button
@@ -234,18 +274,62 @@ export function ImageLightbox({
               />
             </div>
 
-            {/* ── Metadata panel ─────────────────────────────────── */}
             <div className="lightbox-panel">
               <Dialog.Title className="lightbox-panel-title">
                 {selectedImage.filename}
               </Dialog.Title>
 
-              <div className="lightbox-meta-row">
-                <span className="lightbox-meta-label">Hoofdstuk</span>
-                <span className="lightbox-meta-value">
-                  {selectedImage.chapter}
-                </span>
-              </div>
+              {isDigi && selectedImage.sourceCollectionLabel && (
+                <div className="lightbox-meta-row">
+                  <span className="lightbox-meta-label">Collectie</span>
+                  <span className="lightbox-meta-value">
+                    {selectedImage.sourceCollectionLabel}
+                  </span>
+                </div>
+              )}
+
+              {isDigi ? (
+                <div className="lightbox-meta-row lightbox-form-row">
+                  <label
+                    className="lightbox-meta-label"
+                    htmlFor="lightbox-chapter-select"
+                  >
+                    Hoofdstuk
+                  </label>
+                  {onAssignDigiFile ? (
+                    <Select.Root
+                      value={assignedChapterId ?? UNASSIGNED_VALUE}
+                      onValueChange={handleChapterChange}
+                    >
+                      <Select.Trigger
+                        id="lightbox-chapter-select"
+                        className="lightbox-status-trigger"
+                      />
+                      <Select.Content>
+                        <Select.Item value={UNASSIGNED_VALUE}>
+                          Niet toegewezen
+                        </Select.Item>
+                        {chapters.map((ch) => (
+                          <Select.Item key={ch.id} value={ch.id}>
+                            {ch.number !== null ? `${ch.number}. ` : ""}{ch.title}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  ) : (
+                    <span className="lightbox-meta-value">
+                      {selectedImage.assignedChapterLabel ?? "Niet toegewezen"}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="lightbox-meta-row">
+                  <span className="lightbox-meta-label">Hoofdstuk</span>
+                  <span className="lightbox-meta-value">
+                    {selectedImage.chapter}
+                  </span>
+                </div>
+              )}
 
               <div className="lightbox-meta-row">
                 <span className="lightbox-meta-label">Sectie</span>
@@ -311,9 +395,7 @@ export function ImageLightbox({
                 </label>
                 <Select.Root
                   value={currentStatus}
-                  onValueChange={(value) => {
-                    if (isImageStatus(value)) setCurrentStatus(value);
-                  }}
+                  onValueChange={handleStatusChange}
                 >
                   <Select.Trigger
                     id="lightbox-status-select"
@@ -342,9 +424,9 @@ export function ImageLightbox({
                   className="lightbox-notes-area"
                   mt="2"
                   placeholder="Voeg productienotities toe"
-                  value={currentNotes}
+                  defaultValue={currentNotes}
                   resize="vertical"
-                  onChange={(event) => setCurrentNotes(event.target.value)}
+                  onChange={(event) => handleNotesChange(event.target.value)}
                 />
               </div>
             </div>
