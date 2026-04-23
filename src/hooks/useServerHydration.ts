@@ -9,7 +9,16 @@ import {
   serverPreferencesAtom,
   isHydratedAtom,
 } from "@/store/serverAtoms";
+import { ImageStatus } from "@/data/imageData";
 import { useLocalStorageMigration } from "./useLocalStorageMigration";
+
+async function fetchJSON<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Fetch ${url} failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
 
 export function useServerHydration() {
   const setStatusMap = useSetAtom(serverStatusMapAtom);
@@ -23,10 +32,10 @@ export function useServerHydration() {
     async function hydrate() {
       try {
         const [statuses, notes, assignments, preferences] = await Promise.all([
-          fetch("/api/user/statuses").then((r) => r.json()),
-          fetch("/api/user/notes").then((r) => r.json()),
-          fetch("/api/user/assignments").then((r) => r.json()),
-          fetch("/api/user/preferences").then((r) => r.json()),
+          fetchJSON<Record<string, ImageStatus>>("/api/user/statuses"),
+          fetchJSON<Record<string, string>>("/api/user/notes"),
+          fetchJSON<Record<string, string>>("/api/user/assignments"),
+          fetchJSON<Record<string, string>>("/api/user/preferences"),
         ]);
 
         setStatusMap(statuses);
