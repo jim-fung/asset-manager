@@ -35,29 +35,36 @@ export async function getUserPreferences() {
 }
 
 export async function updateUserPreference(formData: FormData) {
-  const userId = await requireUserId();
-  const key = requireString(formData, "key");
-  const value = requireString(formData, "value");
+  try {
+    const userId = await requireUserId();
+    const key = requireString(formData, "key");
+    const value = requireString(formData, "value");
 
-  if (!ALLOWED_PREFERENCE_KEYS.has(key)) {
-    throw new Error(`Unknown preference key: ${key}`);
-  }
+    if (!ALLOWED_PREFERENCE_KEYS.has(key)) {
+      return { ok: false as const, reason: "invalid-key" as const };
+    }
 
-  await db
-    .insert(userUiPreferences)
-    .values({
-      userId,
-      preferenceKey: key,
-      preferenceValue: value,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [userUiPreferences.userId, userUiPreferences.preferenceKey],
-      set: {
+    await db
+      .insert(userUiPreferences)
+      .values({
+        userId,
+        preferenceKey: key,
         preferenceValue: value,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: [userUiPreferences.userId, userUiPreferences.preferenceKey],
+        set: {
+          preferenceValue: value,
+          updatedAt: new Date(),
+        },
+      });
 
-  revalidatePath("/");
+    revalidatePath("/");
+    return { ok: true as const };
+  } catch (error) {
+    // Keep UI responsive even if preference persistence is temporarily unavailable.
+    console.error("Failed to persist UI preference:", error);
+    return { ok: false as const, reason: "db-write-failed" as const };
+  }
 }
