@@ -3,14 +3,25 @@ import type { DigiFile } from "@/data/digiFilesData";
 import { getCollection } from "@/data/digiFilesData";
 import type { ServerImageViewModel } from "@/types/server";
 
-export function bookImageToViewModel(image: ImageAsset): ServerImageViewModel {
+export function bookImageToViewModel(
+  image: ImageAsset,
+  assignments?: Readonly<Record<string, string>>,
+  chapters?: readonly Chapter[],
+): ServerImageViewModel {
+  const effectiveChapterId = assignments?.[image.id] ?? image.chapterId;
+  const effectiveChapterLabel =
+    chapters?.find((chapter) => chapter.id === effectiveChapterId)?.title ??
+    (effectiveChapterId === image.chapterId ? image.chapter : effectiveChapterId);
+
   return {
     ...image,
+    chapterId: effectiveChapterId,
+    chapter: effectiveChapterLabel,
     sourceType: "book",
     sourceCollectionId: null,
     sourceCollectionLabel: null,
-    assignedChapterId: image.chapterId,
-    assignedChapterLabel: image.chapter,
+    assignedChapterId: effectiveChapterId,
+    assignedChapterLabel: effectiveChapterLabel,
     canRemoveFromChapter: false,
   };
 }
@@ -61,8 +72,8 @@ export function getChapterContentsWithAssignments(
   digiFiles: readonly DigiFile[],
 ): ServerImageViewModel[] {
   const bookVms = bookImages
-    .filter((img) => img.chapterId === chapterId)
-    .map(bookImageToViewModel);
+    .map((img) => bookImageToViewModel(img, assignments, chapters))
+    .filter((img) => img.assignedChapterId === chapterId);
 
   const assignedDigiFileIds = Object.entries(assignments)
     .filter(([, cid]) => cid === chapterId)
@@ -84,9 +95,14 @@ export function getChapterImageCountWithAssignments(
   assignments: Readonly<Record<string, string>>,
   bookImages: readonly ImageAsset[],
 ): number {
-  const bookCount = bookImages.filter((img) => img.chapterId === chapterId).length;
-  const assignedCount = Object.values(assignments).filter((cid) => cid === chapterId).length;
-  return bookCount + assignedCount;
+  const bookImageIds = new Set(bookImages.map((img) => img.id));
+  const bookCount = bookImages.filter(
+    (img) => (assignments[img.id] ?? img.chapterId) === chapterId,
+  ).length;
+  const assignedDigiCount = Object.entries(assignments).filter(
+    ([imageId, cid]) => cid === chapterId && !bookImageIds.has(imageId),
+  ).length;
+  return bookCount + assignedDigiCount;
 }
 
 export function getUnassignedDigiFiles(
