@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { userDigiAssignments } from "@/db/schema";
 import { requireUserId } from "@/lib/auth-server";
+import { ensureUserInDb } from "@/lib/user-sync";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -22,6 +23,7 @@ export async function getUserDigiAssignments() {
 
 export async function assignDigiFileToChapter(formData: FormData) {
   const userId = await requireUserId();
+  await ensureUserInDb();
   const digiFileId = formData.get("digiFileId") as string;
   const chapterId = formData.get("chapterId") as string;
 
@@ -53,6 +55,7 @@ export async function assignDigiFileToChapter(formData: FormData) {
 
 export async function unassignDigiFile(formData: FormData) {
   const userId = await requireUserId();
+  await ensureUserInDb();
   const digiFileId = formData.get("digiFileId") as string;
 
   if (!digiFileId) {

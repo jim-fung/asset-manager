@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { userImageStatuses, userImageNotes } from "@/db/schema";
 import { requireUserId } from "@/lib/auth-server";
+import { ensureUserInDb } from "@/lib/user-sync";
 import type { ImageStatus } from "@/data/imageData";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -47,6 +48,7 @@ export async function getUserImageNotes() {
 
 export async function updateImageStatus(formData: FormData) {
   const userId = await requireUserId();
+  await ensureUserInDb();
   const imageId = requireString(formData, "imageId");
   const status = requireString(formData, "status");
 
@@ -56,21 +58,26 @@ export async function updateImageStatus(formData: FormData) {
 
   const typedStatus = status as ImageStatus;
 
-  await db
-    .insert(userImageStatuses)
-    .values({
-      userId,
-      imageId,
-      status: typedStatus,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [userImageStatuses.userId, userImageStatuses.imageId],
-      set: {
+  try {
+    await db
+      .insert(userImageStatuses)
+      .values({
+        userId,
+        imageId,
         status: typedStatus,
         updatedAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: [userImageStatuses.userId, userImageStatuses.imageId],
+        set: {
+          status: typedStatus,
+          updatedAt: new Date(),
+        },
+      });
+  } catch (error) {
+    console.error("Failed to update image status:", error);
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath("/", "layout");
@@ -78,6 +85,7 @@ export async function updateImageStatus(formData: FormData) {
 
 export async function updateImageNotes(formData: FormData) {
   const userId = await requireUserId();
+  await ensureUserInDb();
   const imageId = requireString(formData, "imageId");
   const notes = formData.get("notes");
 
@@ -85,26 +93,31 @@ export async function updateImageNotes(formData: FormData) {
     throw new Error("notes must be a string");
   }
 
-  if (notes === "") {
-    await db
-      .delete(userImageNotes)
-      .where(and(eq(userImageNotes.userId, userId), eq(userImageNotes.imageId, imageId)));
-  } else {
-    await db
-      .insert(userImageNotes)
-      .values({
-        userId,
-        imageId,
-        notes,
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [userImageNotes.userId, userImageNotes.imageId],
-        set: {
+  try {
+    if (notes === "") {
+      await db
+        .delete(userImageNotes)
+        .where(and(eq(userImageNotes.userId, userId), eq(userImageNotes.imageId, imageId)));
+    } else {
+      await db
+        .insert(userImageNotes)
+        .values({
+          userId,
+          imageId,
           notes,
           updatedAt: new Date(),
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: [userImageNotes.userId, userImageNotes.imageId],
+          set: {
+            notes,
+            updatedAt: new Date(),
+          },
+        });
+    }
+  } catch (error) {
+    console.error("Failed to update image notes:", error);
+    throw error;
   }
 
   revalidatePath("/");

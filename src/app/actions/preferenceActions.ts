@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { userUiPreferences } from "@/db/schema";
 import { requireUserId } from "@/lib/auth-server";
+import { ensureUserInDb } from "@/lib/user-sync";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -37,6 +38,7 @@ export async function getUserPreferences() {
 export async function updateUserPreference(formData: FormData) {
   try {
     const userId = await requireUserId();
+    await ensureUserInDb();
     const key = requireString(formData, "key");
     const value = requireString(formData, "value");
 
