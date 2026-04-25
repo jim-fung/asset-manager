@@ -1,27 +1,27 @@
 "use client";
 
-import { Tooltip } from "@radix-ui/themes";
-import type { ReactElement } from "react";
+import { cloneElement, type ReactElement } from "react";
+
+type TooltipCompatibleElementProps = {
+  title?: string;
+  "aria-label"?: string;
+};
 
 interface ConditionalTooltipProps {
   show: boolean;
   content: string;
-  children: ReactElement;
+  children: ReactElement<TooltipCompatibleElementProps>;
 }
 
-/**
- * Wraps children in a Radix Tooltip only when `show` is true.
- * Note: Radix Themes Tooltip already renders children as-is (no extra wrapper),
- * so no `asChild` prop is needed here.
- */
 export function ConditionalTooltip({
   show,
   content,
   children,
 }: ConditionalTooltipProps) {
-  return (
-    <Tooltip content={content} side="right" open={show ? undefined : false}>
-      {children}
-    </Tooltip>
-  );
+  if (!show) return children;
+
+  return cloneElement(children, {
+    title: content,
+    "aria-label": children.props["aria-label"] ?? content,
+  });
 }

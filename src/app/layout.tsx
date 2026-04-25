@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
 import "@/index.css";
+import "react-photo-view/dist/react-photo-view.css";
 import { Suspense } from "react";
+import { Fira_Code, Geist, Lora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { Providers } from "@/components/Providers";
+
+const fontSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const fontSerif = Lora({
+  subsets: ["latin"],
+  variable: "--font-serif",
+});
+
+const fontMono = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Winston van der Bok — Beeldbeheer",
@@ -21,7 +39,7 @@ export default async function RootLayout({
 
   return (
     <html lang="nl">
-      <body>
+      <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <ClerkProvider>
           {userId ? (
             <Providers>

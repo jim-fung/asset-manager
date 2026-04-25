@@ -2,7 +2,6 @@
 
 import { memo, useDeferredValue, useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
-import { SegmentedControl, TextField } from "@radix-ui/themes";
 import {
   digiCollections,
   digiFiles,
@@ -23,6 +22,7 @@ import { Header } from "@/components/Header";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { Input } from "@/components/ui/input";
 
 interface DigiFilesViewProps {
   collectionId: string | null;
@@ -79,7 +79,9 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
   return (
     <>
       <Header title={title} subtitle={subtitle}>
-        <TextField.Root
+        <div className="header-search-wrap">
+          <SearchIcon />
+          <Input
           id="digi-files-search"
           name="digi-files-search"
           className="header-search-field"
@@ -87,23 +89,29 @@ export function DigiFilesView({ collectionId }: DigiFilesViewProps) {
           value={q}
           aria-label="Zoek digitale bestanden"
           onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
-        >
-          <TextField.Slot><SearchIcon /></TextField.Slot>
-        </TextField.Root>
+          />
+        </div>
 
-        <SegmentedControl.Root
-          size="1"
-          value={view}
-          onValueChange={(v) => v && setRouteState({ view: v as RouteViewMode })}
-          aria-label="Weergave wisselen"
-        >
-          <SegmentedControl.Item value="grid" aria-label="Rasterweergave">
+        <div className="segmented-control" role="group" aria-label="Weergave wisselen">
+          <button
+            type="button"
+            className={`segment-item ${view === "grid" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "grid" as RouteViewMode })}
+            aria-label="Rasterweergave"
+            aria-pressed={view === "grid"}
+          >
             <GridIcon />
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="list" aria-label="Lijstweergave">
+          </button>
+          <button
+            type="button"
+            className={`segment-item ${view === "list" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "list" as RouteViewMode })}
+            aria-label="Lijstweergave"
+            aria-pressed={view === "list"}
+          >
             <ListIcon />
-          </SegmentedControl.Item>
-        </SegmentedControl.Root>
+          </button>
+        </div>
       </Header>
 
       {/* Content */}
@@ -221,7 +229,7 @@ const DigiFileCard = memo(function DigiFileCard({ file, assignedChapterLabel, on
         )}
       </div>
       <div className="image-card-info">
-        <div className="image-card-filename">{file.filename}</div>
+        <div className="image-card-title">{file.filename}</div>
         <div className="image-card-meta-row">
           {col && <div className="image-card-chapter">{col.label}</div>}
           <div className="image-card-format">{file.originalFormat.toUpperCase()}</div>

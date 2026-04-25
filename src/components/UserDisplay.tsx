@@ -1,8 +1,9 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Text, Avatar, Skeleton } from "@radix-ui/themes";
 import { UserIcon } from "@/components/Icons";
+import { Avatar } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LogoutButton } from "./LogoutButton";
 
 export function UserDisplay() {
@@ -12,13 +13,13 @@ export function UserDisplay() {
     return (
       <div className="sidebar-user">
         <div className="sidebar-user-row">
-          <Skeleton className="sidebar-user-avatar-skeleton" width="40px" height="40px" />
+          <Skeleton className="sidebar-user-avatar-skeleton h-10 w-10 rounded-full" />
           <div className="sidebar-user-meta">
-            <Skeleton width="120px" height="16px" className="sidebar-user-skeleton-line" />
-            <Skeleton width="160px" height="14px" />
+            <Skeleton className="sidebar-user-skeleton-line h-4 w-[120px]" />
+            <Skeleton className="h-3.5 w-[160px]" />
           </div>
         </div>
-        <Skeleton width="112px" height="34px" />
+        <Skeleton className="h-[34px] w-[112px]" />
       </div>
     );
   }
@@ -31,15 +32,15 @@ export function UserDisplay() {
     <div className="sidebar-user">
       <div className="sidebar-user-row">
         <Avatar
-          size="3"
           src={user.imageUrl}
+          alt={user.fullName ?? "Gebruiker"}
           fallback={<UserIcon />}
           className="sidebar-user-avatar"
         />
         <div className="sidebar-user-meta">
-          <Text size="3" weight="bold" truncate>
+          <div className="truncate text-sm font-bold">
             {user.fullName}
-          </Text>
+          </div>
         </div>
       </div>
       <LogoutButton />

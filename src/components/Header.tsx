@@ -1,7 +1,6 @@
 "use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { IconButton } from "@radix-ui/themes";
 import { mobileSidebarOpenAtom, sidebarCollapsedAtom, mobileSidebarTriggerIdAtom } from "@/store/atoms";
 import { MenuIcon, SidebarIcon } from "@/components/Icons";
 import { useEffect, useId, useRef, useTransition, type ReactNode } from "react";
@@ -45,11 +44,8 @@ export function Header({ children, title, subtitle }: HeaderProps) {
   return (
     <header className="page-header">
       <div className="header-leading">
-        <IconButton
+        <button
           type="button"
-          variant="soft"
-          color="gray"
-          size="2"
           className="mobile-menu-btn"
           id={menuBtnId}
           onClick={() => {
@@ -59,20 +55,17 @@ export function Header({ children, title, subtitle }: HeaderProps) {
           aria-label="Menu openen"
         >
           <MenuIcon />
-        </IconButton>
+        </button>
 
-        <IconButton
+        <button
           type="button"
-          variant="soft"
-          color="gray"
-          size="2"
           className="desktop-sidebar-btn"
           onClick={toggleSidebarCollapsed}
           aria-label={isSidebarCollapsed ? "Zijbalk uitklappen" : "Zijbalk inklappen"}
           title={isSidebarCollapsed ? "Zijbalk uitklappen" : "Zijbalk inklappen"}
         >
           <SidebarIcon collapsed={isSidebarCollapsed} />
-        </IconButton>
+        </button>
 
         <div className="header-titles">
           {title && <div className="page-title">{title}</div>}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { Button } from "@radix-ui/themes";
 import { SignOutIcon } from "@/components/Icons";
+import { Button } from "@/components/ui/button";
 
 export function LogoutButton() {
   const { signOut } = useClerk();
@@ -14,7 +14,6 @@ export function LogoutButton() {
   return (
     <Button
       variant="ghost"
-      color="gray"
       onClick={handleLogout}
       className="sidebar-logout-btn"
     >

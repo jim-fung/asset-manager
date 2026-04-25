@@ -2,7 +2,6 @@
 
 import { useDeferredValue, useMemo } from "react";
 import { useAtomValue } from "jotai";
-import { Button, SegmentedControl, TextField } from "@radix-ui/themes";
 import { chapters, getChapter, images } from "@/data/imageData";
 import { digiFiles } from "@/data/digiFilesData";
 import { serverAssignmentsAtom } from "@/store/serverAtoms";
@@ -21,6 +20,8 @@ import { SearchIcon, GridIcon, ListIcon } from "@/components/Icons";
 import { statusFilterOptions } from "@/utils/statusConfig";
 import { allOf, matchesQuery, matchesStatus } from "@/utils/predicates";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ChapterViewProps {
   chapterId: string;
@@ -83,7 +84,9 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
         title={`${chapter.number !== null ? `Hoofdstuk ${chapter.number}: ` : ""}${chapter.title}`}
         subtitle={chapter.subtitle}
       >
-        <TextField.Root
+        <div className="header-search-wrap">
+          <SearchIcon />
+          <Input
           id="chapter-search"
           name="chapter-search"
           className="header-search-field"
@@ -91,17 +94,15 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           value={q}
           aria-label="Zoek hoofdstukbeelden"
           onChange={(e) => setRouteState({ q: e.target.value }, { replace: true })}
-        >
-          <TextField.Slot><SearchIcon /></TextField.Slot>
-        </TextField.Root>
+          />
+        </div>
 
         <div className="filter-pills">
           {statusFilterOptions.map((f) => (
             <Button
               key={f.value ?? "all"}
-              size="1"
+              size="sm"
               variant={status === f.value ? "soft" : "outline"}
-              color={status === f.value ? "sky" : "gray"}
               onClick={() =>
                 setRouteState({ status: status === f.value ? null : f.value })
               }
@@ -112,19 +113,26 @@ export function ChapterView({ chapterId }: ChapterViewProps) {
           ))}
         </div>
 
-        <SegmentedControl.Root
-          size="1"
-          value={view}
-          onValueChange={(v) => v && setRouteState({ view: v as RouteViewMode })}
-          aria-label="Weergave wisselen"
-        >
-          <SegmentedControl.Item value="grid" aria-label="Rasterweergave">
+        <div className="segmented-control" role="group" aria-label="Weergave wisselen">
+          <button
+            type="button"
+            className={`segment-item ${view === "grid" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "grid" as RouteViewMode })}
+            aria-label="Rasterweergave"
+            aria-pressed={view === "grid"}
+          >
             <GridIcon />
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="list" aria-label="Lijstweergave">
+          </button>
+          <button
+            type="button"
+            className={`segment-item ${view === "list" ? "active" : ""}`}
+            onClick={() => setRouteState({ view: "list" as RouteViewMode })}
+            aria-label="Lijstweergave"
+            aria-pressed={view === "list"}
+          >
             <ListIcon />
-          </SegmentedControl.Item>
-        </SegmentedControl.Root>
+          </button>
+        </div>
       </Header>
 
       {/* Content */}

@@ -1,8 +1,6 @@
 "use client";
 
 import { useAtom, useAtomValue } from "jotai";
-import { IconButton } from "@radix-ui/themes";
-import { FocusScope } from "@radix-ui/react-focus-scope";
 import { mobileSidebarOpenAtom, mobileSidebarTriggerIdAtom, sidebarCollapsedAtom } from "@/store/atoms";
 import { CloseIcon } from "@/components/Icons";
 import { useEffect, type ReactNode } from "react";
@@ -46,22 +44,17 @@ export function Layout({ sidebar, children }: LayoutProps) {
         onClick={() => setIsMobileOpen(false)}
         aria-label="Navigatie sluiten"
       />
-      <FocusScope trapped={isMobileOpen} loop={isMobileOpen}>
-        <aside className="app-sidebar" aria-label="Hoofdnavigatie">
-          <IconButton
-            type="button"
-            variant="soft"
-            color="gray"
-            size="2"
-            className="mobile-close-btn"
-            onClick={() => setIsMobileOpen(false)}
-            aria-label="Menu sluiten"
-          >
-            <CloseIcon />
-          </IconButton>
-          {sidebar}
-        </aside>
-      </FocusScope>
+      <aside className="app-sidebar" aria-label="Hoofdnavigatie">
+        <button
+          type="button"
+          className="mobile-close-btn"
+          onClick={() => setIsMobileOpen(false)}
+          aria-label="Menu sluiten"
+        >
+          <CloseIcon />
+        </button>
+        {sidebar}
+      </aside>
       <main className="app-main" id="main-content">{children}</main>
     </div>
   );
